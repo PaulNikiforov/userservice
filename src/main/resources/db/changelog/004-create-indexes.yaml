@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004
+      author: Pavel Nikiforov
+      changes:
+        - createIndex:
+            tableName: users
+            indexName: idx_users_name
+            columns:
+              - column:
+                  name: name
+
+        - createIndex:
+            tableName: users
+            indexName: idx_users_surname
+            columns:
+              - column:
+                  name: surname
+
+        - createIndex:
+            tableName: users
+            indexName: idx_users_active
+            columns:
+              - column:
+                  name: active
+
+        - createIndex:
+            tableName: payment_cards
+            indexName: idx_payment_cards_user_id
+            columns:
+              - column:
+                  name: user_id
+
+        - createIndex:
+            tableName: payment_cards
+            indexName: idx_payment_cards_active
+            columns:
+              - column:
+                  name: active

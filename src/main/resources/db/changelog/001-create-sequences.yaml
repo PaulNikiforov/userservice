@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001
+      author: Pavel Nikiforov
+      changes:
+        - createSequence:
+            sequenceName: users_id_seq
+            startValue: 1
+            incrementBy: 50
+            minValue: 1
+            cycle: false
+
+        - createSequence:
+            sequenceName: payment_cards_id_seq
+            startValue: 1
+            incrementBy: 50
+            minValue: 1
+            cycle: false
