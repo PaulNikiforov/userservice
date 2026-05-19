@@ -1,0 +1,82 @@
+package com.innowise.userservice.repository;
+
+import com.innowise.userservice.model.User;
+import com.innowise.userservice.repository.specification.UserSpecification;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+public interface UserRepository extends
+        JpaRepository<User, Long>,
+        JpaSpecificationExecutor<User> {
+
+    /**
+     * Finds a user by their email address.
+     *
+     * @param email the email to search for
+     * @return an Optional containing the user if found
+     */
+    Optional<User> findByEmail(String email);
+
+
+    /**
+     * Finds all users filtered by active status with pagination.
+     *
+     * @param active   the active status to filter by
+     * @param pageable pagination and sorting parameters
+     * @return a page of users matching the active status
+     */
+    @Query("SELECT u FROM User u WHERE u.active = :active")
+    Page<User> findByActive(@Param("active") Boolean active, Pageable pageable);
+
+
+    /**
+     * Finds users using dynamic filters with pagination.
+     * Combines multiple conditions using Specification.
+     *
+     * @param name          partial match for name (case-insensitive)
+     * @param surname       partial match for surname (case-insensitive)
+     * @param email         partial match for email (case-insensitive)
+     * @param active        exact match for active status
+     * @param createdAtFrom lower bound for createdAt (inclusive)
+     * @param createdAtTo   upper bound for createdAt (inclusive)
+     * @param pageable      pagination and sorting information
+     * @return a page of users matching the filters
+     */
+    default Page<User> findAllByFilter(String name,
+                                       String surname,
+                                       String email,
+                                       Boolean active,
+                                       LocalDateTime createdAtFrom,
+                                       LocalDateTime createdAtTo,
+                                       Pageable pageable) {
+
+        Specification<User> spec = UserSpecification.filter(
+                name, surname, email, active, createdAtFrom, createdAtTo
+        );
+
+        return findAll(spec, pageable);
+    }
+
+    /**
+     * Finds users by partial name and surname match using Specification composition.
+     *
+     * @param name     partial match for name
+     * @param surname  partial match for surname
+     * @param pageable pagination and sorting information
+     * @return a page of matching users
+     */
+    default Page<User> findAllByNameAndSurname(String name, String surname, Pageable pageable) {
+        Specification<User> spec = UserSpecification.hasNameLike(name)
+                .and(UserSpecification.hasSurnameLike(surname));
+
+        return findAll(spec, pageable);
+    }
+}

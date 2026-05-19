@@ -2,6 +2,16 @@ databaseChangeLog:
   - changeSet:
       id: 004
       author: Pavel Nikiforov
+      comments: |
+        Create indexes for frequently queried columns to optimize performance.
+
+        Index strategy:
+        - idx_users_name: Supports case-insensitive name searches (UserSpecification)
+        - idx_users_surname: Supports case-insensitive surname searches (UserSpecification)
+        - idx_users_active: Optimizes active/inactive user filtering
+        - idx_payment_cards_user_id: Optimizes user-card relationship queries (foreign key)
+        - idx_payment_cards_active: Optimizes active/inactive card filtering
+
       changes:
         - createIndex:
             tableName: users
