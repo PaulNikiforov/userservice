@@ -1,10 +1,8 @@
 package com.innowise.userservice.repository;
 
 import com.innowise.userservice.model.PaymentCard;
-import com.innowise.userservice.repository.specification.PaymentCardSpecification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -56,36 +54,9 @@ public interface PaymentCardRepository extends
      * @return number of active cards
      */
     @Query(value = """
-        SELECT COUNT(*) 
-        FROM payment_cards 
+        SELECT COUNT(*)
+        FROM payment_cards
         WHERE user_id = :userId AND active = true
         """, nativeQuery = true)
     long countActiveCardsByUserId(@Param("userId") Long userId);
-
-
-    /**
-     * Finds payment cards using dynamic filters with pagination.
-     * Uses Specification for flexible querying.
-     *
-     * @param userId          filter by user ID
-     * @param holder          partial match on holder name
-     * @param active          filter by active status
-     * @param expirationFrom  expiration date lower bound
-     * @param expirationTo    expiration date upper bound
-     * @param pageable        pagination and sorting
-     * @return a page of matching payment cards
-     */
-    default Page<PaymentCard> findAllByFilter(Long userId,
-                                              String holder,
-                                              Boolean active,
-                                              LocalDate expirationFrom,
-                                              LocalDate expirationTo,
-                                              Pageable pageable) {
-
-        Specification<PaymentCard> spec = PaymentCardSpecification.filter(
-                userId, holder, active, expirationFrom, expirationTo
-        );
-
-        return findAll(spec, pageable);
-    }
 }

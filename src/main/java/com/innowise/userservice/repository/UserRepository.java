@@ -4,13 +4,13 @@ import com.innowise.userservice.model.User;
 import com.innowise.userservice.repository.specification.UserSpecification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDateTime;
+import jakarta.persistence.LockModeType;
 import java.util.Optional;
 
 public interface UserRepository extends
@@ -25,6 +25,14 @@ public interface UserRepository extends
      */
     Optional<User> findByEmail(String email);
 
+    /**
+     * Checks if a user exists by email.
+     *
+     * @param email the email to check
+     * @return true if a user with the email exists
+     */
+    boolean existsByEmail(String email);
+
 
     /**
      * Finds all users filtered by active status with pagination.
@@ -38,34 +46,6 @@ public interface UserRepository extends
 
 
     /**
-     * Finds users using dynamic filters with pagination.
-     * Combines multiple conditions using Specification.
-     *
-     * @param name          partial match for name (case-insensitive)
-     * @param surname       partial match for surname (case-insensitive)
-     * @param email         partial match for email (case-insensitive)
-     * @param active        exact match for active status
-     * @param createdAtFrom lower bound for createdAt (inclusive)
-     * @param createdAtTo   upper bound for createdAt (inclusive)
-     * @param pageable      pagination and sorting information
-     * @return a page of users matching the filters
-     */
-    default Page<User> findAllByFilter(String name,
-                                       String surname,
-                                       String email,
-                                       Boolean active,
-                                       LocalDateTime createdAtFrom,
-                                       LocalDateTime createdAtTo,
-                                       Pageable pageable) {
-
-        Specification<User> spec = UserSpecification.filter(
-                name, surname, email, active, createdAtFrom, createdAtTo
-        );
-
-        return findAll(spec, pageable);
-    }
-
-    /**
      * Finds users by partial name and surname match using Specification composition.
      *
      * @param name     partial match for name
@@ -74,9 +54,18 @@ public interface UserRepository extends
      * @return a page of matching users
      */
     default Page<User> findAllByNameAndSurname(String name, String surname, Pageable pageable) {
-        Specification<User> spec = UserSpecification.hasNameLike(name)
+        var spec = UserSpecification.hasNameLike(name)
                 .and(UserSpecification.hasSurnameLike(surname));
-
         return findAll(spec, pageable);
     }
+
+    /**
+     * Finds a user by ID with pessimistic write lock.
+     * Use this when you need to prevent concurrent modifications (e.g., checking limits before creating entities).
+     *
+     * @param id the user ID to search for
+     * @return an Optional containing the user if found
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<User> findByIdWithLock(Long id);
 }

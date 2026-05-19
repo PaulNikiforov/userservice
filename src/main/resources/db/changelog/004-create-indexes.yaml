@@ -6,11 +6,18 @@ databaseChangeLog:
         Create indexes for frequently queried columns to optimize performance.
 
         Index strategy:
+        User table indexes:
         - idx_users_name: Supports case-insensitive name searches (UserSpecification)
         - idx_users_surname: Supports case-insensitive surname searches (UserSpecification)
+        - idx_users_email: Optimizes user lookup by email (authentication, duplicate check)
+        - idx_users_created_at: Supports date range queries (UserSpecification)
         - idx_users_active: Optimizes active/inactive user filtering
+
+        PaymentCard table indexes:
         - idx_payment_cards_user_id: Optimizes user-card relationship queries (foreign key)
         - idx_payment_cards_active: Optimizes active/inactive card filtering
+        - idx_payment_cards_expiration_date: Supports expiry date filtering (PaymentCardSpecification)
+        - idx_payment_cards_user_id_active: Composite index for user's active cards queries
 
       changes:
         - createIndex:
@@ -26,6 +33,20 @@ databaseChangeLog:
             columns:
               - column:
                   name: surname
+
+        - createIndex:
+            tableName: users
+            indexName: idx_users_email
+            columns:
+              - column:
+                  name: email
+
+        - createIndex:
+            tableName: users
+            indexName: idx_users_created_at
+            columns:
+              - column:
+                  name: created_at
 
         - createIndex:
             tableName: users
@@ -45,5 +66,21 @@ databaseChangeLog:
             tableName: payment_cards
             indexName: idx_payment_cards_active
             columns:
+              - column:
+                  name: active
+
+        - createIndex:
+            tableName: payment_cards
+            indexName: idx_payment_cards_expiration_date
+            columns:
+              - column:
+                  name: expiration_date
+
+        - createIndex:
+            tableName: payment_cards
+            indexName: idx_payment_cards_user_id_active
+            columns:
+              - column:
+                  name: user_id
               - column:
                   name: active

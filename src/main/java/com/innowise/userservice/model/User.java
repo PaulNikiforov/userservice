@@ -152,7 +152,17 @@ public class User extends BaseEntity {
         if (card == null) {
             throw new IllegalArgumentException("Payment card cannot be null");
         }
-        boolean removed = paymentCards.remove(card);
+
+        // Use removeIf to handle both persisted (with id) and non-persisted (without id) cards
+        boolean removed = paymentCards.removeIf(c -> {
+            if (c.getId() != null) {
+                return c.getId().equals(card.getId());
+            } else {
+                // For non-persisted cards, compare by reference
+                return c == card;
+            }
+        });
+
         if (removed) {
             card.setUser(null);
         }
