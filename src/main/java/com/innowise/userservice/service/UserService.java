@@ -47,7 +47,7 @@ public class UserService {
         try {
             User user = userMapper.toEntity(dto);
             user.setActive(true);
-            User saved = userRepository.save(user);
+            User saved = userRepository.saveAndFlush(user);
             log.info("User {} created with id {}", dto.email(), saved.getId());
             return userMapper.toResponseDTO(saved);
         } catch (DataIntegrityViolationException e) {

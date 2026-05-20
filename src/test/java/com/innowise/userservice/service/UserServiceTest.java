@@ -118,7 +118,7 @@ class UserServiceTest {
     @Test
     void testCreateUser_Success() {
         when(userMapper.toEntity(testRequestDTO)).thenReturn(testUser);
-        when(userRepository.save(any(User.class))).thenReturn(testUser);
+        when(userRepository.saveAndFlush(any(User.class))).thenReturn(testUser);
         when(userMapper.toResponseDTO(testUser)).thenReturn(testResponseDTO);
 
         UserResponseDTO result = userService.createUser(testRequestDTO);
@@ -127,18 +127,18 @@ class UserServiceTest {
         assertEquals("John", result.name());
 
         verify(userMapper, times(1)).toEntity(testRequestDTO);
-        verify(userRepository, times(1)).save(any(User.class));
+        verify(userRepository, times(1)).saveAndFlush(any(User.class));
     }
 
     @Test
     void testCreateUser_DuplicateEmail_ThrowsException() {
         when(userMapper.toEntity(testRequestDTO)).thenReturn(testUser);
-        when(userRepository.save(any(User.class))).thenThrow(new DataIntegrityViolationException("duplicate key"));
+        when(userRepository.saveAndFlush(any(User.class))).thenThrow(new DataIntegrityViolationException("duplicate key"));
 
         assertThrows(DuplicateEmailException.class, () -> userService.createUser(testRequestDTO));
 
         verify(userMapper, times(1)).toEntity(testRequestDTO);
-        verify(userRepository, times(1)).save(any(User.class));
+        verify(userRepository, times(1)).saveAndFlush(any(User.class));
     }
 
     @Test
