@@ -119,7 +119,7 @@ class PaymentCardServiceTest {
         when(userRepository.findByIdWithLock(1L)).thenReturn(Optional.of(testUser));
         when(paymentCardRepository.countActiveCardsByUserId(1L)).thenReturn(2L);
         when(paymentCardMapper.toEntity(testRequestDTO)).thenReturn(testCard);
-        when(paymentCardRepository.save(any(PaymentCard.class))).thenReturn(testCard);
+        when(paymentCardRepository.saveAndFlush(any(PaymentCard.class))).thenReturn(testCard);
         when(paymentCardMapper.toResponseDTO(testCard)).thenReturn(testResponseDTO);
 
         PaymentCardResponseDTO result = paymentCardService.addCard(1L, testRequestDTO);
@@ -130,7 +130,7 @@ class PaymentCardServiceTest {
         verify(userRepository, times(1)).findByIdWithLock(1L);
         verify(paymentCardRepository, times(1)).countActiveCardsByUserId(1L);
         verify(paymentCardMapper, times(1)).toEntity(testRequestDTO);
-        verify(paymentCardRepository, times(1)).save(any(PaymentCard.class));
+        verify(paymentCardRepository, times(1)).saveAndFlush(any(PaymentCard.class));
     }
 
     @Test
@@ -140,7 +140,7 @@ class PaymentCardServiceTest {
         assertThrows(UserNotFoundException.class, () -> paymentCardService.addCard(999L, testRequestDTO));
 
         verify(userRepository, times(1)).findByIdWithLock(999L);
-        verify(paymentCardRepository, never()).save(any(PaymentCard.class));
+        verify(paymentCardRepository, never()).saveAndFlush(any(PaymentCard.class));
     }
 
     @Test
@@ -153,7 +153,7 @@ class PaymentCardServiceTest {
         verify(userRepository, times(1)).findByIdWithLock(1L);
         verify(paymentCardRepository, times(1)).countActiveCardsByUserId(1L);
         verify(paymentCardMapper, never()).toEntity(any());
-        verify(paymentCardRepository, never()).save(any(PaymentCard.class));
+        verify(paymentCardRepository, never()).saveAndFlush(any(PaymentCard.class));
     }
 
     @Test
@@ -223,14 +223,14 @@ class PaymentCardServiceTest {
         when(userRepository.findByIdWithLock(1L)).thenReturn(Optional.of(testUser));
         when(paymentCardRepository.countActiveCardsByUserId(1L)).thenReturn(2L);
         when(paymentCardMapper.toEntity(testRequestDTO)).thenReturn(testCard);
-        when(paymentCardRepository.save(any(PaymentCard.class)))
+        when(paymentCardRepository.saveAndFlush(any(PaymentCard.class)))
                 .thenThrow(new DataIntegrityViolationException("duplicate key"));
 
         assertThrows(DuplicateCardNumberException.class,
                 () -> paymentCardService.addCard(1L, testRequestDTO));
 
         verify(userRepository, times(1)).findByIdWithLock(1L);
-        verify(paymentCardRepository, times(1)).save(any(PaymentCard.class));
+        verify(paymentCardRepository, times(1)).saveAndFlush(any(PaymentCard.class));
     }
 
     @Test

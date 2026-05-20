@@ -73,7 +73,7 @@ public class PaymentCardService {
             PaymentCard card = paymentCardMapper.toEntity(dto);
             card.setActive(true);
             user.addPaymentCard(card);
-            PaymentCard saved = paymentCardRepository.save(card);
+            PaymentCard saved = paymentCardRepository.saveAndFlush(card);
             log.info("Payment card {} created for user {}", saved.getId(), userId);
             return paymentCardMapper.toResponseDTO(saved);
         } catch (DataIntegrityViolationException e) {
