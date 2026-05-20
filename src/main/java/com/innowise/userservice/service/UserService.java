@@ -9,7 +9,6 @@ import com.innowise.userservice.model.dto.UserRequestDTO;
 import com.innowise.userservice.model.dto.UserResponseDTO;
 import com.innowise.userservice.repository.UserRepository;
 import com.innowise.userservice.repository.specification.UserSpecification;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -42,7 +41,7 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponseDTO createUser(@Valid UserRequestDTO dto) {
+    public UserResponseDTO createUser(UserRequestDTO dto) {
         log.info("Creating user with email {}", dto.email());
         try {
             User user = userMapper.toEntity(dto);
@@ -58,9 +57,10 @@ public class UserService {
 
     @CachePut(value = "users", key = "#id")
     @Transactional
-    public UserResponseDTO updateUser(Long id, @Valid UserRequestDTO dto) {
+    public UserResponseDTO updateUser(Long id, UserRequestDTO dto) {
         log.info("Updating user {}", id);
         User existing = userRepository.findById(id)
+                .filter(User::isActive)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
 
         try {

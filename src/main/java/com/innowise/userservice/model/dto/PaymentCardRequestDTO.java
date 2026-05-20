@@ -2,6 +2,7 @@ package com.innowise.userservice.model.dto;
 
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
@@ -16,6 +17,7 @@ public record PaymentCardRequestDTO(
         @Size(min = 2, max = 100, message = "Holder name must be between 2 and 100 characters")
         String holder,
 
+        @NotNull(message = "Expiration date is required")
         @Future(message = "Expiration date must be in the future")
         LocalDate expirationDate
 ) {}

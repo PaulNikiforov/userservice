@@ -28,6 +28,11 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), extractPath(request), null);
     }
 
+    @ExceptionHandler(DuplicateCardNumberException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateCard(DuplicateCardNumberException ex, WebRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), extractPath(request), null);
+    }
+
     @ExceptionHandler(MaxPaymentCardsLimitException.class)
     public ResponseEntity<ErrorResponse> handleUnprocessableEntity(MaxPaymentCardsLimitException ex, WebRequest request) {
         return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, "Unprocessable Entity", ex.getMessage(),

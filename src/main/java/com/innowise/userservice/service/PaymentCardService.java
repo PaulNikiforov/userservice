@@ -1,5 +1,7 @@
 package com.innowise.userservice.service;
 
+import com.innowise.userservice.exception.DuplicateCardNumberException;
+import org.springframework.dao.DataIntegrityViolationException;
 import com.innowise.userservice.model.dto.PaymentCardRequestDTO;
 import com.innowise.userservice.model.dto.PaymentCardResponseDTO;
 import com.innowise.userservice.exception.MaxPaymentCardsLimitException;
@@ -10,7 +12,6 @@ import com.innowise.userservice.model.PaymentCard;
 import com.innowise.userservice.model.User;
 import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -57,7 +58,7 @@ public class PaymentCardService {
 
     @CacheEvict(value = "userCards", key = "#userId")
     @Transactional
-    public PaymentCardResponseDTO addCard(Long userId, @Valid PaymentCardRequestDTO dto) {
+    public PaymentCardResponseDTO addCard(Long userId, PaymentCardRequestDTO dto) {
         log.info("Adding payment card for user {}", userId);
         User user = userRepository.findByIdWithLock(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
@@ -68,12 +69,17 @@ public class PaymentCardService {
             throw new MaxPaymentCardsLimitException("User " + userId + " has reached the maximum limit of " + MAX_ACTIVE_CARDS + " active payment cards");
         }
 
-        PaymentCard card = paymentCardMapper.toEntity(dto);
-        card.setActive(true);
-        user.addPaymentCard(card);
-        PaymentCard saved = paymentCardRepository.save(card);
-        log.info("Payment card {} created for user {}", saved.getId(), userId);
-        return paymentCardMapper.toResponseDTO(saved);
+        try {
+            PaymentCard card = paymentCardMapper.toEntity(dto);
+            card.setActive(true);
+            user.addPaymentCard(card);
+            PaymentCard saved = paymentCardRepository.save(card);
+            log.info("Payment card {} created for user {}", saved.getId(), userId);
+            return paymentCardMapper.toResponseDTO(saved);
+        } catch (DataIntegrityViolationException e) {
+            log.warn("Duplicate card number on add for user {}", userId);
+            throw new DuplicateCardNumberException("Card with this number already exists");
+        }
     }
 
     @Caching(evict = {
@@ -81,9 +87,10 @@ public class PaymentCardService {
             @CacheEvict(value = "userCards", key = "#result.userId")
     })
     @Transactional
-    public PaymentCardResponseDTO updateCard(Long id, @Valid PaymentCardRequestDTO dto) {
+    public PaymentCardResponseDTO updateCard(Long id, PaymentCardRequestDTO dto) {
         log.info("Updating payment card {}", id);
         PaymentCard existing = paymentCardRepository.findById(id)
+                .filter(PaymentCard::isActive)
                 .orElseThrow(() -> new PaymentCardNotFoundException("Payment card not found with id: " + id));
 
         paymentCardMapper.updateEntityFromDTO(dto, existing);

@@ -70,4 +70,12 @@ public class PaymentCardController {
         PaymentCardResponseDTO activated = paymentCardService.activateCard(id);
         return ResponseEntity.ok(activated);
     }
+
+    @PatchMapping("/cards/{id}/deactivate")
+    public ResponseEntity<PaymentCardResponseDTO> deactivateCard(
+        @PathVariable Long id
+    ) {
+        PaymentCardResponseDTO deactivated = paymentCardService.deactivateCard(id);
+        return ResponseEntity.ok(deactivated);
+    }
 }
