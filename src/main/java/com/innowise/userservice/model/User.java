@@ -26,7 +26,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-@EqualsAndHashCode(of = {"email"})
+@EqualsAndHashCode(of = {"email"}, callSuper = false)
 public class User extends BaseEntity {
 
     @Id

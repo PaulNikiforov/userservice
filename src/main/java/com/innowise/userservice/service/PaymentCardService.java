@@ -98,16 +98,18 @@ public class PaymentCardService {
         return paymentCardMapper.toResponseDTO(existing);
     }
 
+    /** Returns DTO to enable @CacheEvict with #result.userId — void methods can't use SpEL on return value. */
     @Caching(evict = {
             @CacheEvict(value = "paymentCards", key = "#id"),
             @CacheEvict(value = "userCards", key = "#result.userId")
     })
     @Transactional
-    public void deleteCard(Long id) {
+    public PaymentCardResponseDTO deleteCard(Long id) {
         log.info("Soft deleting payment card {}", id);
         PaymentCard card = paymentCardRepository.findById(id)
                 .orElseThrow(() -> new PaymentCardNotFoundException("Payment card not found with id: " + id));
         card.setActive(false);
+        return paymentCardMapper.toResponseDTO(card);
     }
 
     @Caching(evict = {

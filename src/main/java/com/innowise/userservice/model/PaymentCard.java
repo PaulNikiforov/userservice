@@ -23,7 +23,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @NoArgsConstructor
-@EqualsAndHashCode(of = {"number"})
+@EqualsAndHashCode(of = {"number"}, callSuper = false)
 public class PaymentCard extends BaseEntity {
 
     @Id
