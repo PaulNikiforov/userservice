@@ -12,6 +12,9 @@ import com.innowise.userservice.repository.specification.UserSpecification;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,12 +36,14 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
 
+    @Cacheable(value = "users", key = "#id")
     @Transactional(readOnly = true)
     public UserResponseDTO getUserById(Long id) {
         log.debug("Fetching user {}", id);
-        User user = userRepository.findById(id)
+        return userRepository.findById(id)
+                .filter(User::isActive)
+                .map(userMapper::toResponseDTO)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
-        return userMapper.toResponseDTO(user);
     }
 
     @Transactional
@@ -56,6 +61,7 @@ public class UserService {
         }
     }
 
+    @CachePut(value = "users", key = "#id")
     @Transactional
     public UserResponseDTO updateUser(Long id, @Valid UserRequestDTO dto) {
         log.info("Updating user {}", id);
@@ -64,6 +70,7 @@ public class UserService {
 
         try {
             userMapper.updateEntityFromDTO(dto, existing);
+            userRepository.saveAndFlush(existing);
             return userMapper.toResponseDTO(existing);
         } catch (DataIntegrityViolationException e) {
             log.warn("Duplicate email on update user {}: {}", id, dto.email());
@@ -71,9 +78,9 @@ public class UserService {
         }
     }
 
+    @CacheEvict(value = "users", key = "#id")
     @Transactional
     public void deleteUser(Long id) {
-        log.info("Soft deleting user {}", id);
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
         user.setActive(false);
@@ -93,6 +100,7 @@ public class UserService {
         return users.map(userMapper::toResponseDTO);
     }
 
+    @CachePut(value = "users", key = "#id")
     @Transactional
     public UserResponseDTO activateUser(Long id) {
         log.info("Activating user {}", id);
@@ -102,6 +110,7 @@ public class UserService {
         return userMapper.toResponseDTO(user);
     }
 
+    @CachePut(value = "users", key = "#id")
     @Transactional
     public UserResponseDTO deactivateUser(Long id) {
         log.info("Deactivating user {}", id);

@@ -169,10 +169,12 @@ class PaymentCardServiceTest {
     @Test
     void testDeleteCard_Success() {
         when(paymentCardRepository.findById(1L)).thenReturn(Optional.of(testCard));
+        when(paymentCardMapper.toResponseDTO(testCard)).thenReturn(testResponseDTO);
 
-        paymentCardService.deleteCard(1L);
+        PaymentCardResponseDTO result = paymentCardService.deleteCard(1L);
 
         assertFalse(testCard.isActive());
+        assertNotNull(result);
 
         verify(paymentCardRepository, times(1)).findById(1L);
     }

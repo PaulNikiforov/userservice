@@ -30,9 +30,9 @@ public interface PaymentCardMapper {
 
     @org.mapstruct.Named("maskCardNumber")
     default String maskCardNumber(String number) {
-        if (number == null || number.length() != 16) {
-            return number;
+        if (number == null || number.length() < 4) {
+            return "****";
         }
-        return "**** **** **** " + number.substring(12);
+        return "**** **** **** " + number.substring(number.length() - 4);
     }
 }
