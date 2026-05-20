@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -182,6 +183,43 @@ class UserServiceTest {
         assertEquals("John", result.getContent().getFirst().name());
 
         verify(userRepository, times(1)).findAll(any(Specification.class), any(Pageable.class));
+    }
+
+    @Test
+    void testUpdateUser_InactiveUser_ThrowsException() {
+        testUser.setActive(false);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+
+        assertThrows(UserNotFoundException.class, () -> userService.updateUser(1L, testRequestDTO));
+
+        verify(userMapper, never()).updateEntityFromDTO(any(), any());
+    }
+
+    @Test
+    void testActivateUser_Success() {
+        testUser.setActive(false);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userMapper.toResponseDTO(testUser)).thenReturn(testResponseDTO);
+
+        UserResponseDTO result = userService.activateUser(1L);
+
+        assertTrue(testUser.isActive());
+        assertNotNull(result);
+
+        verify(userRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void testDeactivateUser_Success() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userMapper.toResponseDTO(testUser)).thenReturn(testResponseDTO);
+
+        UserResponseDTO result = userService.deactivateUser(1L);
+
+        assertFalse(testUser.isActive());
+        assertNotNull(result);
+
+        verify(userRepository, times(1)).findById(1L);
     }
 
     @Test

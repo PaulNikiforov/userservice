@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -36,10 +37,14 @@ class PaymentCardFlowIT {
     @Autowired
     private PaymentCardRepository paymentCardRepository;
 
+    @Autowired
+    private CacheManager cacheManager;
+
     private Long testUserId;
 
     @BeforeEach
     void setUp() {
+        cacheManager.getCacheNames().forEach(name -> cacheManager.getCache(name).clear());
         paymentCardRepository.deleteAll();
         userRepository.deleteAll();
         UserResponseDTO user = createUser("John", "Doe", "john@example.com");
