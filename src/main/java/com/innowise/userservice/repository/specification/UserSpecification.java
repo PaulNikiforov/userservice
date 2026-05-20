@@ -15,7 +15,7 @@ public final class UserSpecification {
             if (name == null || name.isBlank()) {
                 return cb.conjunction();
             }
-            return cb.like(cb.lower(root.get("name")), "%" + name.toLowerCase() + "%");
+            return cb.like(cb.lower(root.get("name")), name.toLowerCase() + "%");
         };
     }
 
@@ -24,7 +24,7 @@ public final class UserSpecification {
             if (surname == null || surname.isBlank()) {
                 return cb.conjunction();
             }
-            return cb.like(cb.lower(root.get("surname")), "%" + surname.toLowerCase() + "%");
+            return cb.like(cb.lower(root.get("surname")), surname.toLowerCase() + "%");
         };
     }
 

@@ -49,6 +49,7 @@ public class User extends BaseEntity {
     @Column(name = "active", nullable = false)
     private boolean active = true;
 
+    // orphanRemoval performs hard delete — always use card.setActive(false) for soft delete
     @BatchSize(size = 50)
     @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PaymentCard> paymentCards = new ArrayList<>();

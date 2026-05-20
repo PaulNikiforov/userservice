@@ -21,24 +21,10 @@ databaseChangeLog:
 
         - createIndex:
             tableName: users
-            indexName: idx_users_email
-            columns:
-              - column:
-                  name: email
-
-        - createIndex:
-            tableName: users
             indexName: idx_users_created_at
             columns:
               - column:
                   name: created_at
-
-        - createIndex:
-            tableName: users
-            indexName: idx_users_active
-            columns:
-              - column:
-                  name: active
 
         - createIndex:
             tableName: payment_cards
@@ -46,13 +32,6 @@ databaseChangeLog:
             columns:
               - column:
                   name: user_id
-
-        - createIndex:
-            tableName: payment_cards
-            indexName: idx_payment_cards_active
-            columns:
-              - column:
-                  name: active
 
         - createIndex:
             tableName: payment_cards
