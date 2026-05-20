@@ -15,6 +15,7 @@
 	<properties>
 		<java.version>21</java.version>
 		<mockito.version>5.17.0</mockito.version>
+		<sonar.version>5.6.0.6792</sonar.version>
 		<argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
 		<sonar.projectKey>PaulNikiforov_userservice</sonar.projectKey>
 		<sonar.organization>paulnikiforov</sonar.organization>
