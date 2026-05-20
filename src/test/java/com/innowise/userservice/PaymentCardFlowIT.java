@@ -57,7 +57,7 @@ class PaymentCardFlowIT {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().id()).isNotNull();
-        assertThat(response.getBody().number()).startsWith("****");
+        assertThat(response.getBody().number()).isEqualTo("1111111111111111");
         assertThat(response.getBody().userId()).isEqualTo(testUserId);
     }
 
@@ -100,7 +100,7 @@ class PaymentCardFlowIT {
     }
 
     @Test
-    @DisplayName("GET /api/cards/{id} → 200 with masked number")
+    @DisplayName("GET /api/cards/{id} → 200 with card number")
     void shouldGetCardById() {
         PaymentCardResponseDTO card = addCard(testUserId, "1234567812345678", "John Doe");
 
@@ -108,7 +108,7 @@ class PaymentCardFlowIT {
                 "/api/cards/" + card.id(), PaymentCardResponseDTO.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody().number()).isEqualTo("**** **** **** 5678");
+        assertThat(response.getBody().number()).isEqualTo("1234567812345678");
     }
 
     @Test
