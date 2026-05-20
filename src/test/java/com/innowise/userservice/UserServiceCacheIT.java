@@ -120,14 +120,14 @@ class UserServiceCacheIT {
     }
 
     @Test
-    @DisplayName("Should update cache when user is deactivated via @CachePut")
-    void shouldUpdateCacheWhenUserDeactivated() {
+    @DisplayName("Should evict cache when user is deactivated via @CacheEvict")
+    void shouldEvictCacheWhenUserDeactivated() {
         UserResponseDTO created = createTestUser("Eva", "Green", "eva@example.com");
 
         UserResponseDTO deactivated = userService.deactivateUser(created.id());
 
         assertThat(deactivated.active()).isFalse();
-        assertThat(getCachedUser(created.id())).isNotNull();
+        assertThat(getCachedUser(created.id())).isNull();
     }
 
     @Test

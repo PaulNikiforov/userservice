@@ -104,7 +104,7 @@ public class UserService {
         return userMapper.toResponseDTO(user);
     }
 
-    @CachePut(value = "users", key = "#id")
+    @CacheEvict(value = "users", key = "#id")
     @Transactional
     public UserResponseDTO deactivateUser(Long id) {
         log.info("Deactivating user {}", id);
