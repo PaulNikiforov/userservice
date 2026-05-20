@@ -100,3 +100,5 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # TODO: Add deploy step (SSH to server + docker-compose pull && docker-compose up -d)
