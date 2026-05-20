@@ -14,12 +14,6 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Global exception handler for REST API.
- *
- * <p>Handles all custom exceptions and provides standardized error responses.
- * Uses Spring's @RestControllerAdvice for centralized exception handling.
- */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {

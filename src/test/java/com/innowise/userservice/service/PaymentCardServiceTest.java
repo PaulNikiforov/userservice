@@ -178,4 +178,49 @@ class PaymentCardServiceTest {
 
         verify(paymentCardRepository, times(1)).findById(1L);
     }
+
+    @Test
+    void testGetCardById_InactiveCard_ThrowsException() {
+        testCard.setActive(false);
+        when(paymentCardRepository.findById(1L)).thenReturn(Optional.of(testCard));
+
+        assertThrows(PaymentCardNotFoundException.class, () -> paymentCardService.getCardById(1L));
+
+        verify(paymentCardMapper, never()).toResponseDTO(any());
+    }
+
+    @Test
+    void testGetCardsByUserId_UserNotFound() {
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class, () -> paymentCardService.getCardsByUserId(999L));
+    }
+
+    @Test
+    void testUpdateCard_NotFound() {
+        when(paymentCardRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(PaymentCardNotFoundException.class, () -> paymentCardService.updateCard(999L, testRequestDTO));
+    }
+
+    @Test
+    void testDeleteCard_NotFound() {
+        when(paymentCardRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(PaymentCardNotFoundException.class, () -> paymentCardService.deleteCard(999L));
+    }
+
+    @Test
+    void testActivateCard_NotFound() {
+        when(paymentCardRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(PaymentCardNotFoundException.class, () -> paymentCardService.activateCard(999L));
+    }
+
+    @Test
+    void testDeactivateCard_NotFound() {
+        when(paymentCardRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(PaymentCardNotFoundException.class, () -> paymentCardService.deactivateCard(999L));
+    }
 }

@@ -2,27 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 003
       author: Pavel Nikiforov
-      comments: |
-        Create payment_cards table for storing user payment card information.
-
-        Business rules enforced at database level:
-        - user_id: BIGINT foreign key references users(id) for relationship
-        - number: VARCHAR(16) with unique constraint (basic card number storage)
-        - expiration_date: DATE for validity period tracking
-        - active: BOOLEAN defaults to true for soft deletion pattern
-        - created_at/updated_at: TIMESTAMP for audit trail
-
-        Design decisions:
-        - Foreign key constraint ensures referential integrity
-        - Unique constraint on card number prevents duplicates
-        - VARCHAR(16) for card number (in production, consider encryption)
-        - Soft deletion via active flag for audit trail preservation
-        - Cascade operations handled at application level (JPA)
-
-        Security considerations:
-        - Card numbers stored in plaintext (should be encrypted in production)
-        - Consider using tokenization or PCI-compliant storage
-        - Last 4 digits only should be displayed in UI
+      comments: Create payment_cards table with foreign key to users.
       changes:
         - createTable:
             tableName: payment_cards

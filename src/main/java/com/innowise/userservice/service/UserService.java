@@ -22,12 +22,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Service for user business logic.
- *
- * <p>Manages CRUD operations for users with email uniqueness enforcement,
- * soft deletion, and activation/deactivation support.
- */
+/** User business logic: CRUD, soft deletion, activation. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -92,7 +87,6 @@ public class UserService {
         Specification<User> spec = UserSpecification.filter(
                 filter.name(),
                 filter.surname(),
-                filter.email(),
                 filter.active()
         );
 

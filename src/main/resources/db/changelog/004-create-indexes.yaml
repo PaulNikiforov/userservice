@@ -2,22 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 004
       author: Pavel Nikiforov
-      comments: |
-        Create indexes for frequently queried columns to optimize performance.
-
-        Index strategy:
-        User table indexes:
-        - idx_users_name: Supports case-insensitive name searches (UserSpecification)
-        - idx_users_surname: Supports case-insensitive surname searches (UserSpecification)
-        - idx_users_email: Optimizes user lookup by email (authentication, duplicate check)
-        - idx_users_created_at: Supports date range queries (UserSpecification)
-        - idx_users_active: Optimizes active/inactive user filtering
-
-        PaymentCard table indexes:
-        - idx_payment_cards_user_id: Optimizes user-card relationship queries (foreign key)
-        - idx_payment_cards_active: Optimizes active/inactive card filtering
-        - idx_payment_cards_expiration_date: Supports expiry date filtering (PaymentCardSpecification)
-        - idx_payment_cards_user_id_active: Composite index for user's active cards queries
+      comments: Add indexes for users and payment_cards.
 
       changes:
         - createIndex:

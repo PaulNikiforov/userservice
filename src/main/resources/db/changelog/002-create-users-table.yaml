@@ -2,21 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 002
       author: Pavel Nikiforov
-      comments: |
-        Create users table with core user information and audit fields.
-
-        Business rules enforced at database level:
-        - email: VARCHAR(100) with unique constraint for login/identification
-        - birth_date: DATE for age validation (must be 18+ years old)
-        - active: BOOLEAN defaults to true for soft deletion pattern
-        - created_at: TIMESTAMP with nullable=false for audit trail
-        - updated_at: TIMESTAMP with nullable=false for audit trail
-
-        Design decisions:
-        - Using BIGINT for id to support large user base
-        - VARCHAR(100) for name/surname to accommodate international names
-        - Soft deletion via active flag instead of hard deletes
-        - Audit timestamps (created_at, updated_at) for tracking
+      comments: Create users table.
       changes:
         - createTable:
             tableName: users

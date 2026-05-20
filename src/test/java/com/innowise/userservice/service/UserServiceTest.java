@@ -106,6 +106,16 @@ class UserServiceTest {
     }
 
     @Test
+    void testGetUserById_InactiveUser_ThrowsException() {
+        testUser.setActive(false);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+
+        assertThrows(UserNotFoundException.class, () -> userService.getUserById(1L));
+
+        verify(userMapper, never()).toResponseDTO(any());
+    }
+
+    @Test
     void testCreateUser_Success() {
         when(userMapper.toEntity(testRequestDTO)).thenReturn(testUser);
         when(userRepository.save(any(User.class))).thenReturn(testUser);
@@ -158,7 +168,7 @@ class UserServiceTest {
 
     @Test
     void testFilterUsers_Success() {
-        UserFilterDTO filter = new UserFilterDTO("John", null, null, null);
+        UserFilterDTO filter = new UserFilterDTO("John", null, null);
         Pageable pageable = PageRequest.of(0, 10);
         Page<User> userPage = new PageImpl<>(List.of(testUser));
 
@@ -172,5 +182,41 @@ class UserServiceTest {
         assertEquals("John", result.getContent().getFirst().name());
 
         verify(userRepository, times(1)).findAll(any(Specification.class), any(Pageable.class));
+    }
+
+    @Test
+    void testUpdateUser_NotFound() {
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class, () -> userService.updateUser(999L, testRequestDTO));
+    }
+
+    @Test
+    void testUpdateUser_DuplicateEmail_ThrowsException() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userRepository.saveAndFlush(any(User.class))).thenThrow(new DataIntegrityViolationException("duplicate"));
+
+        assertThrows(DuplicateEmailException.class, () -> userService.updateUser(1L, testRequestDTO));
+    }
+
+    @Test
+    void testDeleteUser_NotFound() {
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class, () -> userService.deleteUser(999L));
+    }
+
+    @Test
+    void testActivateUser_NotFound() {
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class, () -> userService.activateUser(999L));
+    }
+
+    @Test
+    void testDeactivateUser_NotFound() {
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class, () -> userService.deactivateUser(999L));
     }
 }

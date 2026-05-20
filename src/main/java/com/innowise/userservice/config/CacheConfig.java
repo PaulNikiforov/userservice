@@ -17,23 +17,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
 
-/**
- * Redis cache configuration for the UserService.
- *
- * <p>Configures cache regions with specific TTLs:
- * <ul>
- *   <li>users — user by ID, 15 min TTL</li>
- *   <li>paymentCards — card by ID, 10 min TTL</li>
- *   <li>userCards — cards list by user ID, 5 min TTL</li>
- * </ul>
- *
- * <p>All caches use JSON serialization with type-restricted deserialization
- * and disable null value caching.
- *
- * <p>{@code transactionAware()} defers all cache writes until after the transaction commits.
- * This means within a single {@code @Transactional} method, a second {@code @Cacheable} call
- * will still hit the database (cache is not yet populated).
- */
+/** Redis cache configuration with JSON serialization and transaction-aware writes. */
 @Configuration
 @EnableCaching
 public class CacheConfig {
@@ -66,9 +50,6 @@ public class CacheConfig {
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaultConfig)
-                .withCacheConfiguration("users", defaultConfig.entryTtl(Duration.ofMinutes(15)))
-                .withCacheConfiguration("paymentCards", defaultConfig.entryTtl(Duration.ofMinutes(10)))
-                .withCacheConfiguration("userCards", defaultConfig.entryTtl(Duration.ofMinutes(5)))
                 .transactionAware()
                 .build();
     }

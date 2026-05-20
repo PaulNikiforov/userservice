@@ -15,7 +15,6 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 public interface PaymentCardMapper {
 
     @Mapping(source = "user.id", target = "userId")
-    @Mapping(source = "number", target = "number", qualifiedByName = "maskCardNumber")
     PaymentCardResponseDTO toResponseDTO(PaymentCard card);
 
     @Mapping(target = "id", ignore = true)
@@ -28,11 +27,4 @@ public interface PaymentCardMapper {
     @Mapping(target = "active", ignore = true)
     void updateEntityFromDTO(PaymentCardRequestDTO dto, @MappingTarget PaymentCard card);
 
-    @org.mapstruct.Named("maskCardNumber")
-    default String maskCardNumber(String number) {
-        if (number == null || number.length() < 4) {
-            return "****";
-        }
-        return "**** **** **** " + number.substring(number.length() - 4);
-    }
 }

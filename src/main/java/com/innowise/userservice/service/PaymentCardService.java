@@ -22,12 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/**
- * Service for payment card business logic.
- *
- * <p>Manages CRUD operations for payment cards with business rule enforcement:
- * maximum 5 active cards per user, soft deletion, and activation/deactivation.
- */
+/** Payment card business logic: CRUD, max 5 active cards per user. */
 @Slf4j
 @Service
 @RequiredArgsConstructor

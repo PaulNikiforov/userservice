@@ -137,7 +137,7 @@ class UserServiceCacheIT {
         createTestUser("User2", "Test", "user2@test.com");
 
         userService.filterUsers(
-                new UserFilterDTO(null, null, null, true),
+                new UserFilterDTO(null, null, true),
                 PageRequest.of(0, 10)
         );
 
