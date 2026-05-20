@@ -37,7 +37,7 @@ import java.util.List;
  * <p>Relationships:
  * <ul>
  *   <li>One-to-many with PaymentCard (bidirectional)</li>
- *   <li>Cascade operations: ALL (create, update, delete)</li>
+ *   <li>Cascade persist and merge operations</li>
  *   <li>Orphan removal enabled for payment cards</li>
  * </ul>
  *
@@ -49,7 +49,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-@EqualsAndHashCode(of = {"id"})
+@EqualsAndHashCode(of = {"email"})
 public class User extends BaseEntity {
 
     @Id
@@ -101,12 +101,12 @@ public class User extends BaseEntity {
      * <p>Business rules:
      * <ul>
      *   <li>Maximum 5 active cards per user</li>
-     *   <li>Cascade all operations (create, update, delete)</li>
+     *   <li>Cascade persist and merge operations</li>
      *   <li>Orphan removal enabled</li>
      * </ul>
      */
     @BatchSize(size = 50)
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PaymentCard> paymentCards = new ArrayList<>();
 
     /**

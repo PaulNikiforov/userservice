@@ -86,11 +86,11 @@ class PaymentCardServiceTest {
     }
 
     @Test
-    void testGetPaymentCardById_Success() {
+    void testGetCardById_Success() {
         when(paymentCardRepository.findById(1L)).thenReturn(Optional.of(testCard));
         when(paymentCardMapper.toResponseDTO(testCard)).thenReturn(testResponseDTO);
 
-        PaymentCardResponseDTO result = paymentCardService.getPaymentCardById(1L);
+        PaymentCardResponseDTO result = paymentCardService.getCardById(1L);
 
         assertNotNull(result);
         assertEquals("**** **** **** 5678", result.number());
@@ -101,24 +101,24 @@ class PaymentCardServiceTest {
     }
 
     @Test
-    void testGetPaymentCardById_NotFound() {
+    void testGetCardById_NotFound() {
         when(paymentCardRepository.findById(999L)).thenReturn(Optional.empty());
 
-        assertThrows(PaymentCardNotFoundException.class, () -> paymentCardService.getPaymentCardById(999L));
+        assertThrows(PaymentCardNotFoundException.class, () -> paymentCardService.getCardById(999L));
 
         verify(paymentCardRepository, times(1)).findById(999L);
         verify(paymentCardMapper, never()).toResponseDTO(any());
     }
 
     @Test
-    void testCreatePaymentCard_Success() {
+    void testAddCard_Success() {
         when(userRepository.findByIdWithLock(1L)).thenReturn(Optional.of(testUser));
         when(paymentCardRepository.countActiveCardsByUserId(1L)).thenReturn(2L);
         when(paymentCardMapper.toEntity(testRequestDTO)).thenReturn(testCard);
         when(paymentCardRepository.save(any(PaymentCard.class))).thenReturn(testCard);
         when(paymentCardMapper.toResponseDTO(testCard)).thenReturn(testResponseDTO);
 
-        PaymentCardResponseDTO result = paymentCardService.createPaymentCard(1L, testRequestDTO);
+        PaymentCardResponseDTO result = paymentCardService.addCard(1L, testRequestDTO);
 
         assertNotNull(result);
         assertEquals("**** **** **** 5678", result.number());
@@ -130,21 +130,21 @@ class PaymentCardServiceTest {
     }
 
     @Test
-    void testCreatePaymentCard_UserNotFound() {
+    void testAddCard_UserNotFound() {
         when(userRepository.findByIdWithLock(999L)).thenReturn(Optional.empty());
 
-        assertThrows(UserNotFoundException.class, () -> paymentCardService.createPaymentCard(999L, testRequestDTO));
+        assertThrows(UserNotFoundException.class, () -> paymentCardService.addCard(999L, testRequestDTO));
 
         verify(userRepository, times(1)).findByIdWithLock(999L);
         verify(paymentCardRepository, never()).save(any(PaymentCard.class));
     }
 
     @Test
-    void testCreatePaymentCard_MaxLimitReached() {
+    void testAddCard_MaxLimitReached() {
         when(userRepository.findByIdWithLock(1L)).thenReturn(Optional.of(testUser));
         when(paymentCardRepository.countActiveCardsByUserId(1L)).thenReturn(5L); // Max limit
 
-        assertThrows(MaxPaymentCardsLimitException.class, () -> paymentCardService.createPaymentCard(1L, testRequestDTO));
+        assertThrows(MaxPaymentCardsLimitException.class, () -> paymentCardService.addCard(1L, testRequestDTO));
 
         verify(userRepository, times(1)).findByIdWithLock(1L);
         verify(paymentCardRepository, times(1)).countActiveCardsByUserId(1L);
@@ -153,11 +153,11 @@ class PaymentCardServiceTest {
     }
 
     @Test
-    void testUpdatePaymentCard_Success() {
+    void testUpdateCard_Success() {
         when(paymentCardRepository.findById(1L)).thenReturn(Optional.of(testCard));
         when(paymentCardMapper.toResponseDTO(testCard)).thenReturn(testResponseDTO);
 
-        PaymentCardResponseDTO result = paymentCardService.updatePaymentCard(1L, testRequestDTO);
+        PaymentCardResponseDTO result = paymentCardService.updateCard(1L, testRequestDTO);
 
         assertNotNull(result);
         assertEquals("**** **** **** 5678", result.number());
@@ -167,10 +167,10 @@ class PaymentCardServiceTest {
     }
 
     @Test
-    void testDeletePaymentCard_Success() {
+    void testDeleteCard_Success() {
         when(paymentCardRepository.findById(1L)).thenReturn(Optional.of(testCard));
 
-        paymentCardService.deletePaymentCard(1L);
+        paymentCardService.deleteCard(1L);
 
         assertFalse(testCard.isActive());
 

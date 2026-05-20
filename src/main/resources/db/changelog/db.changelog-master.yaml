@@ -1,9 +1,9 @@
 databaseChangeLog:
   - include:
-      file: changelog/001-create-sequences.yaml
+      file: db/changelog/001-create-sequences.yaml
   - include:
-      file: changelog/002-create-users-table.yaml
+      file: db/changelog/002-create-users-table.yaml
   - include:
-      file: changelog/003-create-payment-cards-table.yaml
+      file: db/changelog/003-create-payment-cards-table.yaml
   - include:
-      file: changelog/004-create-indexes.yaml
+      file: db/changelog/004-create-indexes.yaml

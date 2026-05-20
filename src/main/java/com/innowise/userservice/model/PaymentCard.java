@@ -45,7 +45,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @NoArgsConstructor
-@EqualsAndHashCode(of = {"id"})
+@EqualsAndHashCode(of = {"number"})
 public class PaymentCard extends BaseEntity {
 
     @Id
@@ -64,16 +64,16 @@ public class PaymentCard extends BaseEntity {
     /**
      * Card number (16 digits, basic validation).
      * In production, this should be encrypted and only last 4 digits shown.
-     * Required field, max 20 characters to allow for formatting.
+     * Required field, max 16 characters.
      */
-    @Column(name = "number", nullable = false, length = 20)
+    @Column(name = "number", nullable = false, length = 16)
     private String number;
 
     /**
      * Cardholder name as printed on the card.
-     * Required field, max 100 characters.
+     * Required field, max 255 characters.
      */
-    @Column(name = "holder", nullable = false, length = 100)
+    @Column(name = "holder", nullable = false)
     private String holder;
 
     /**
@@ -98,7 +98,7 @@ public class PaymentCard extends BaseEntity {
      *
      * @param user User who owns this card (required)
      * @param number Card number, 16 digits (required)
-     * @param holder Cardholder name (required, max 100 chars)
+     * @param holder Cardholder name (required, max 255 chars)
      * @param expirationDate Card expiration date (required, must be in future)
      * @throws IllegalArgumentException if any parameter is null
      */
