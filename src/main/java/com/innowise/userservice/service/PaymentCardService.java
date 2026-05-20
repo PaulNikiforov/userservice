@@ -103,12 +103,11 @@ public class PaymentCardService {
             @CacheEvict(value = "userCards", key = "#result.userId")
     })
     @Transactional
-    public PaymentCardResponseDTO deleteCard(Long id) {
+    public void deleteCard(Long id) {
         log.info("Soft deleting payment card {}", id);
         PaymentCard card = paymentCardRepository.findById(id)
                 .orElseThrow(() -> new PaymentCardNotFoundException("Payment card not found with id: " + id));
         card.setActive(false);
-        return paymentCardMapper.toResponseDTO(card);
     }
 
     @Caching(evict = {

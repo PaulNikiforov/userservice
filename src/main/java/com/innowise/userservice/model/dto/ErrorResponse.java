@@ -23,8 +23,4 @@ public record ErrorResponse(
     String message,
     Map<String, String> validationErrors,
     String path
-) {
-    public ErrorResponse(LocalDateTime timestamp, int status, String error, String message, String path) {
-        this(timestamp, status, error, message, null, path);
-    }
-}
+) {}
