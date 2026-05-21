@@ -40,6 +40,11 @@ jobs:
             target/surefire-reports/
             target/failsafe-reports/
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/jacoco.xml
+
   code-quality:
     name: SonarQube
     runs-on: ubuntu-latest
@@ -55,6 +60,11 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: temurin
           cache: maven
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/
 
       - run: mvn verify -B -DskipTests org.sonarsource.scanner.maven:sonar-maven-plugin:${{ env.SONAR_VERSION }}:sonar -Dsonar.token=$SONAR_TOKEN
         env:
