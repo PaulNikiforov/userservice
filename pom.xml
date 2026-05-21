@@ -24,10 +24,10 @@
         <sonar.coverage.exclusions>
             **/Application.java,
             **/config/**,
-            **/dto/**,
-            **/entity/**,
+            **/model/**,
             **/exception/**,
             **/constant/**,
+            **/repository/specification/**,
             **/target/generated-sources/**
         </sonar.coverage.exclusions>
 	</properties>
