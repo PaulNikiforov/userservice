@@ -10,7 +10,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -36,7 +37,10 @@ class UserControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
+    private JpaMetamodelMappingContext jpaMetamodelMappingContext;
+
+    @MockitoBean
     private UserService userService;
 
     private UserRequestDTO requestDTO;
@@ -88,7 +92,7 @@ class UserControllerTest {
 
     @Test
     void getUserById_NotFound() throws Exception {
-        when(userService.getUserById(999L)).thenThrow(new UserNotFoundException(999L));
+        when(userService.getUserById(999L)).thenThrow(new UserNotFoundException("User not found"));
 
         mockMvc.perform(get("/api/users/999"))
                 .andExpect(status().isNotFound());
@@ -118,7 +122,7 @@ class UserControllerTest {
     @Test
     void updateUser_NotFound() throws Exception {
         when(userService.updateUser(eq(999L), any(UserRequestDTO.class)))
-                .thenThrow(new UserNotFoundException(999L));
+                .thenThrow(new UserNotFoundException("User not found"));
 
         mockMvc.perform(put("/api/users/999")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -136,7 +140,7 @@ class UserControllerTest {
 
     @Test
     void deleteUser_NotFound() throws Exception {
-        org.mockito.Mockito.doThrow(new UserNotFoundException(999L)).when(userService).deleteUser(999L);
+        org.mockito.Mockito.doThrow(new UserNotFoundException("User not found")).when(userService).deleteUser(999L);
 
         mockMvc.perform(delete("/api/users/999"))
                 .andExpect(status().isNotFound());

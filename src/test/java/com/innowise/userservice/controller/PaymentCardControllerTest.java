@@ -10,7 +10,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -32,7 +33,10 @@ class PaymentCardControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
+    private JpaMetamodelMappingContext jpaMetamodelMappingContext;
+
+    @MockitoBean
     private PaymentCardService paymentCardService;
 
     private PaymentCardRequestDTO requestDTO;
@@ -73,7 +77,7 @@ class PaymentCardControllerTest {
     @Test
     void addCard_UserNotFound() throws Exception {
         when(paymentCardService.addCard(eq(999L), any(PaymentCardRequestDTO.class)))
-                .thenThrow(new UserNotFoundException(999L));
+                .thenThrow(new UserNotFoundException("User not found"));
 
         mockMvc.perform(post("/api/users/999/cards")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -92,7 +96,7 @@ class PaymentCardControllerTest {
 
     @Test
     void getUserCards_UserNotFound() throws Exception {
-        when(paymentCardService.getCardsByUserId(999L)).thenThrow(new UserNotFoundException(999L));
+        when(paymentCardService.getCardsByUserId(999L)).thenThrow(new UserNotFoundException("User not found"));
 
         mockMvc.perform(get("/api/users/999/cards"))
                 .andExpect(status().isNotFound());
@@ -110,7 +114,7 @@ class PaymentCardControllerTest {
 
     @Test
     void getCardById_NotFound() throws Exception {
-        when(paymentCardService.getCardById(999L)).thenThrow(new PaymentCardNotFoundException(999L));
+        when(paymentCardService.getCardById(999L)).thenThrow(new PaymentCardNotFoundException("Card not found"));
 
         mockMvc.perform(get("/api/cards/999"))
                 .andExpect(status().isNotFound());
@@ -130,7 +134,7 @@ class PaymentCardControllerTest {
     @Test
     void updateCard_NotFound() throws Exception {
         when(paymentCardService.updateCard(eq(999L), any(PaymentCardRequestDTO.class)))
-                .thenThrow(new PaymentCardNotFoundException(999L));
+                .thenThrow(new PaymentCardNotFoundException("Card not found"));
 
         mockMvc.perform(put("/api/cards/999")
                         .contentType(MediaType.APPLICATION_JSON)
