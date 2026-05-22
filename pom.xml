@@ -30,6 +30,7 @@
             **/repository/specification/**,
             **/target/generated-sources/**
         </sonar.coverage.exclusions>
+		<sonar.scanner.skipJreProvisioning>true</sonar.scanner.skipJreProvisioning>
 	</properties>
 	
 	<dependencies>
@@ -194,6 +195,11 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+		    <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>${sonar.version}</version>
             </plugin>
 		</plugins>
 	</build>

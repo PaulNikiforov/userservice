@@ -12,7 +12,6 @@ concurrency:
 
 env:
   JAVA_VERSION: '21'
-  SONAR_VERSION: '5.6.0.6792'
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
@@ -66,7 +65,7 @@ jobs:
           name: jacoco-report
           path: target/site/jacoco/
 
-      - run: mvn verify -B -DskipTests org.sonarsource.scanner.maven:sonar-maven-plugin:${{ env.SONAR_VERSION }}:sonar -Dsonar.token=$SONAR_TOKEN
+      - run: mvn verify -B -DskipTests sonar:sonar -Dsonar.token=$SONAR_TOKEN
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

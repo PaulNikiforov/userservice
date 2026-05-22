@@ -35,6 +35,8 @@ public class PaymentCardService {
     private final PaymentCardMapper paymentCardMapper;
 
     private static final int MAX_ACTIVE_CARDS = 5;
+    private static final String USER_NOT_FOUND_MSG = "User not found with id: ";
+    private static final String PAYMENT_CARD_NOT_FOUND_MSG = "Payment card not found with id: ";
 
     @Cacheable(value = "userCards", key = "#userId")
     @Transactional(readOnly = true)
@@ -42,7 +44,7 @@ public class PaymentCardService {
         log.debug("Fetching active cards for user {}", userId);
         userRepository.findById(userId)
                 .filter(User::isActive)
-                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG + userId));
         return paymentCardRepository.findByUserIdAndActive(userId, true).stream()
                 .map(paymentCardMapper::toResponseDTO)
                 .toList();
@@ -55,7 +57,7 @@ public class PaymentCardService {
         return paymentCardRepository.findById(id)
                 .filter(PaymentCard::isActive)
                 .map(paymentCardMapper::toResponseDTO)
-                .orElseThrow(() -> new PaymentCardNotFoundException("Payment card not found with id: " + id));
+                .orElseThrow(() -> new PaymentCardNotFoundException(PAYMENT_CARD_NOT_FOUND_MSG + id));
     }
 
     @CacheEvict(value = "userCards", key = "#userId")
@@ -63,12 +65,13 @@ public class PaymentCardService {
     public PaymentCardResponseDTO addCard(Long userId, PaymentCardRequestDTO dto) {
         log.info("Adding payment card for user {}", userId);
         User user = userRepository.findByIdWithLock(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG + userId));
 
         long activeCardsCount = paymentCardRepository.countActiveCardsByUserId(userId);
         if (activeCardsCount >= MAX_ACTIVE_CARDS) {
             log.warn("User {} has reached the maximum limit of {} active payment cards", userId, MAX_ACTIVE_CARDS);
-            throw new MaxPaymentCardsLimitException("User " + userId + " has reached the maximum limit of " + MAX_ACTIVE_CARDS + " active payment cards");
+            throw new MaxPaymentCardsLimitException(
+                    "User " + userId + " has reached the maximum limit of " + MAX_ACTIVE_CARDS + " active payment cards");
         }
 
         try {
@@ -93,7 +96,7 @@ public class PaymentCardService {
         log.info("Updating payment card {}", id);
         PaymentCard existing = paymentCardRepository.findById(id)
                 .filter(PaymentCard::isActive)
-                .orElseThrow(() -> new PaymentCardNotFoundException("Payment card not found with id: " + id));
+                .orElseThrow(() -> new PaymentCardNotFoundException(PAYMENT_CARD_NOT_FOUND_MSG + id));
 
         paymentCardMapper.updateEntityFromDTO(dto, existing);
         try {
@@ -127,7 +130,7 @@ public class PaymentCardService {
     public PaymentCardResponseDTO deleteCard(Long id) {
         log.info("Hard deleting payment card {}", id);
         PaymentCard card = paymentCardRepository.findById(id)
-                .orElseThrow(() -> new PaymentCardNotFoundException("Payment card not found with id: " + id));
+                .orElseThrow(() -> new PaymentCardNotFoundException(PAYMENT_CARD_NOT_FOUND_MSG + id));
         if (card.isActive()) {
             throw new ActiveCardDeletionException(
                     "Cannot delete active card with id: " + id + ". Deactivate it first.");
@@ -146,11 +149,11 @@ public class PaymentCardService {
     public PaymentCardResponseDTO activateCard(Long id) {
         log.info("Activating payment card {}", id);
         PaymentCard card = paymentCardRepository.findById(id)
-                .orElseThrow(() -> new PaymentCardNotFoundException("Payment card not found with id: " + id));
+                .orElseThrow(() -> new PaymentCardNotFoundException(PAYMENT_CARD_NOT_FOUND_MSG + id));
         if (!card.isActive()) {
             Long userId = card.getUser().getId();
             userRepository.findByIdWithLock(userId)
-                    .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+                    .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG + userId));
             long activeCardsCount = paymentCardRepository.countActiveCardsByUserId(userId);
             if (activeCardsCount >= MAX_ACTIVE_CARDS) {
                 log.warn("User {} has reached the maximum limit of {} active payment cards on activation", userId, MAX_ACTIVE_CARDS);
@@ -169,7 +172,7 @@ public class PaymentCardService {
     public PaymentCardResponseDTO deactivateCard(Long id) {
         log.info("Deactivating payment card {}", id);
         PaymentCard card = paymentCardRepository.findById(id)
-                .orElseThrow(() -> new PaymentCardNotFoundException("Payment card not found with id: " + id));
+                .orElseThrow(() -> new PaymentCardNotFoundException(PAYMENT_CARD_NOT_FOUND_MSG + id));
         card.setActive(false);
         return paymentCardMapper.toResponseDTO(card);
     }
