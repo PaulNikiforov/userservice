@@ -126,7 +126,8 @@ class PaymentCardServiceCacheIT {
         paymentCardService.deleteCard(card.id());
         cacheManager.getCache("paymentCards").clear();
 
-        assertThatThrownBy(() -> paymentCardService.getCardById(card.id()))
+        Long cardId = card.id();
+        assertThatThrownBy(() -> paymentCardService.getCardById(cardId))
                 .isInstanceOf(PaymentCardNotFoundException.class);
     }
 

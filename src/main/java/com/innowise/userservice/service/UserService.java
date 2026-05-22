@@ -30,6 +30,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UserService {
 
+    private static final String USER_NOT_FOUND_MSG = "User not found with id: ";
+
     private final UserRepository userRepository;
     private final PaymentCardRepository paymentCardRepository;
     private final UserMapper userMapper;
@@ -41,7 +43,7 @@ public class UserService {
         return userRepository.findById(id)
                 .filter(User::isActive)
                 .map(userMapper::toResponseDTO)
-                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG + id));
     }
 
     @Transactional
@@ -65,7 +67,7 @@ public class UserService {
         log.info("Updating user {}", id);
         User existing = userRepository.findById(id)
                 .filter(User::isActive)
-                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG + id));
 
         try {
             userMapper.updateEntityFromDTO(dto, existing);
@@ -95,7 +97,7 @@ public class UserService {
     public void deleteUser(Long id) {
         log.info("Hard deleting user {}", id);
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG + id));
         if (user.isActive()) {
             throw new UserDeletionNotAllowedException(
                     "Cannot delete active user with id: " + id + ". Deactivate the user first.");
@@ -121,7 +123,7 @@ public class UserService {
     public UserResponseDTO activateUser(Long id) {
         log.info("Activating user {}", id);
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG + id));
         user.setActive(true);
         return userMapper.toResponseDTO(user);
     }
@@ -144,7 +146,7 @@ public class UserService {
     public UserResponseDTO deactivateUser(Long id) {
         log.info("Deactivating user {}", id);
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG + id));
         long activeCards = paymentCardRepository.countActiveCardsByUserId(id);
         if (activeCards > 0) {
             log.warn("Cannot deactivate user {} — has {} active card(s)", id, activeCards);
