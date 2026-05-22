@@ -7,3 +7,5 @@ databaseChangeLog:
       file: db/changelog/003-create-payment-cards-table.yaml
   - include:
       file: db/changelog/004-create-indexes.yaml
+  - include:
+      file: db/changelog/005-fix-payment-card-number-unique.yaml

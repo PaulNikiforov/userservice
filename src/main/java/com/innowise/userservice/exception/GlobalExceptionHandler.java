@@ -25,13 +25,14 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage(), extractPath(request), null);
     }
 
-    @ExceptionHandler(DuplicateEmailException.class)
-    public ResponseEntity<ErrorResponse> handleConflict(DuplicateEmailException ex, WebRequest request) {
-        return buildResponse(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), extractPath(request), null);
-    }
-
-    @ExceptionHandler(DuplicateCardNumberException.class)
-    public ResponseEntity<ErrorResponse> handleDuplicateCard(DuplicateCardNumberException ex, WebRequest request) {
+    @ExceptionHandler({
+            DuplicateEmailException.class,
+            DuplicateCardNumberException.class,
+            ActiveCardDeletionException.class,
+            UserDeactivationNotAllowedException.class,
+            UserDeletionNotAllowedException.class
+    })
+    public ResponseEntity<ErrorResponse> handleConflict(Exception ex, WebRequest request) {
         return buildResponse(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), extractPath(request), null);
     }
 

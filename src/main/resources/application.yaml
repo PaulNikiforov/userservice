@@ -29,7 +29,7 @@ spring:
           max-active: 8
           max-idle: 8
           min-idle: 0
-          max-wait: -1ms
+          max-wait: 2000ms
 
   cache:
     type: redis
@@ -41,6 +41,15 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: never
 
 springdoc:
   api-docs:

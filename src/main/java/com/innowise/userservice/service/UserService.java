@@ -1,12 +1,15 @@
 package com.innowise.userservice.service;
 
 import com.innowise.userservice.exception.DuplicateEmailException;
+import com.innowise.userservice.exception.UserDeactivationNotAllowedException;
+import com.innowise.userservice.exception.UserDeletionNotAllowedException;
 import com.innowise.userservice.exception.UserNotFoundException;
 import com.innowise.userservice.mapper.UserMapper;
 import com.innowise.userservice.model.User;
 import com.innowise.userservice.model.dto.UserFilterDTO;
 import com.innowise.userservice.model.dto.UserRequestDTO;
 import com.innowise.userservice.model.dto.UserResponseDTO;
+import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
 import com.innowise.userservice.repository.specification.UserSpecification;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PaymentCardRepository paymentCardRepository;
     private final UserMapper userMapper;
 
     @Cacheable(value = "users", key = "#id")
@@ -73,12 +77,30 @@ public class UserService {
         }
     }
 
+    /**
+     * Hard deletes a user.
+     *
+     * <p>Business rules:
+     * <ul>
+     *   <li>Only inactive users (active=false) can be deleted</li>
+     *   <li>Attempting to delete an active user throws UserDeletionNotAllowedException</li>
+     * </ul>
+     *
+     * @param id User ID
+     * @throws UserNotFoundException          if user not found
+     * @throws UserDeletionNotAllowedException if user is still active
+     */
     @CacheEvict(value = "users", key = "#id")
     @Transactional
     public void deleteUser(Long id) {
+        log.info("Hard deleting user {}", id);
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
-        user.setActive(false);
+        if (user.isActive()) {
+            throw new UserDeletionNotAllowedException(
+                    "Cannot delete active user with id: " + id + ". Deactivate the user first.");
+        }
+        userRepository.delete(user);
     }
 
     @Transactional(readOnly = true)
@@ -104,12 +126,32 @@ public class UserService {
         return userMapper.toResponseDTO(user);
     }
 
+    /**
+     * Deactivates a user (soft delete).
+     *
+     * <p>Business rules:
+     * <ul>
+     *   <li>User can only be deactivated if they have no active payment cards</li>
+     *   <li>Deactivate all cards first, then deactivate the user</li>
+     * </ul>
+     *
+     * @param id User ID
+     * @throws UserNotFoundException                if user not found
+     * @throws UserDeactivationNotAllowedException  if user has active payment cards
+     */
     @CacheEvict(value = "users", key = "#id")
     @Transactional
     public UserResponseDTO deactivateUser(Long id) {
         log.info("Deactivating user {}", id);
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+        long activeCards = paymentCardRepository.countActiveCardsByUserId(id);
+        if (activeCards > 0) {
+            log.warn("Cannot deactivate user {} — has {} active card(s)", id, activeCards);
+            throw new UserDeactivationNotAllowedException(
+                    "Cannot deactivate user with id: " + id + ". User has " + activeCards
+                    + " active card(s). Deactivate all cards first.");
+        }
         user.setActive(false);
         return userMapper.toResponseDTO(user);
     }

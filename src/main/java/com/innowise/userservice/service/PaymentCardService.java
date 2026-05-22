@@ -1,15 +1,15 @@
 package com.innowise.userservice.service;
 
+import com.innowise.userservice.exception.ActiveCardDeletionException;
 import com.innowise.userservice.exception.DuplicateCardNumberException;
-import org.springframework.dao.DataIntegrityViolationException;
-import com.innowise.userservice.model.dto.PaymentCardRequestDTO;
-import com.innowise.userservice.model.dto.PaymentCardResponseDTO;
 import com.innowise.userservice.exception.MaxPaymentCardsLimitException;
 import com.innowise.userservice.exception.PaymentCardNotFoundException;
 import com.innowise.userservice.exception.UserNotFoundException;
 import com.innowise.userservice.mapper.PaymentCardMapper;
 import com.innowise.userservice.model.PaymentCard;
 import com.innowise.userservice.model.User;
+import com.innowise.userservice.model.dto.PaymentCardRequestDTO;
+import com.innowise.userservice.model.dto.PaymentCardResponseDTO;
 import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +18,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +41,7 @@ public class PaymentCardService {
     public List<PaymentCardResponseDTO> getCardsByUserId(Long userId) {
         log.debug("Fetching active cards for user {}", userId);
         userRepository.findById(userId)
+                .filter(User::isActive)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
         return paymentCardRepository.findByUserIdAndActive(userId, true).stream()
                 .map(paymentCardMapper::toResponseDTO)
@@ -82,10 +84,10 @@ public class PaymentCardService {
         }
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "paymentCards", key = "#id"),
-            @CacheEvict(value = "userCards", key = "#result.userId")
-    })
+    @Caching(
+            put  = { @CachePut(value = "paymentCards", key = "#id") },
+            evict = { @CacheEvict(value = "userCards", key = "#result.userId") }
+    )
     @Transactional
     public PaymentCardResponseDTO updateCard(Long id, PaymentCardRequestDTO dto) {
         log.info("Updating payment card {}", id);
@@ -94,22 +96,46 @@ public class PaymentCardService {
                 .orElseThrow(() -> new PaymentCardNotFoundException("Payment card not found with id: " + id));
 
         paymentCardMapper.updateEntityFromDTO(dto, existing);
-        paymentCardRepository.saveAndFlush(existing);
+        try {
+            paymentCardRepository.saveAndFlush(existing);
+        } catch (DataIntegrityViolationException e) {
+            log.warn("Duplicate card number on update card {}", id);
+            throw new DuplicateCardNumberException("Card with this number already exists");
+        }
         return paymentCardMapper.toResponseDTO(existing);
     }
 
-    /** Returns DTO to enable @CacheEvict with #result.userId — void methods can't use SpEL on return value. */
+    /**
+     * Hard deletes a payment card.
+     *
+     * <p>Business rules:
+     * <ul>
+     *   <li>Only inactive cards (active=false) can be deleted</li>
+     *   <li>Attempting to delete an active card throws ActiveCardDeletionException</li>
+     *   <li>Card is removed from user's collection before deletion to keep JPA state consistent</li>
+     * </ul>
+     *
+     * @param id Payment card ID
+     * @throws PaymentCardNotFoundException if card not found
+     * @throws ActiveCardDeletionException  if card is active
+     */
     @Caching(evict = {
             @CacheEvict(value = "paymentCards", key = "#id"),
             @CacheEvict(value = "userCards", key = "#result.userId")
     })
     @Transactional
     public PaymentCardResponseDTO deleteCard(Long id) {
-        log.info("Soft deleting payment card {}", id);
+        log.info("Hard deleting payment card {}", id);
         PaymentCard card = paymentCardRepository.findById(id)
                 .orElseThrow(() -> new PaymentCardNotFoundException("Payment card not found with id: " + id));
-        card.setActive(false);
-        return paymentCardMapper.toResponseDTO(card);
+        if (card.isActive()) {
+            throw new ActiveCardDeletionException(
+                    "Cannot delete active card with id: " + id + ". Deactivate it first.");
+        }
+        PaymentCardResponseDTO response = paymentCardMapper.toResponseDTO(card);
+        card.getUser().removePaymentCard(card);
+        paymentCardRepository.delete(card);
+        return response;
     }
 
     @Caching(evict = {
@@ -121,7 +147,17 @@ public class PaymentCardService {
         log.info("Activating payment card {}", id);
         PaymentCard card = paymentCardRepository.findById(id)
                 .orElseThrow(() -> new PaymentCardNotFoundException("Payment card not found with id: " + id));
-        card.setActive(true);
+        if (!card.isActive()) {
+            Long userId = card.getUser().getId();
+            userRepository.findByIdWithLock(userId)
+                    .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+            long activeCardsCount = paymentCardRepository.countActiveCardsByUserId(userId);
+            if (activeCardsCount >= MAX_ACTIVE_CARDS) {
+                log.warn("User {} has reached the maximum limit of {} active payment cards on activation", userId, MAX_ACTIVE_CARDS);
+                throw new MaxPaymentCardsLimitException("User " + userId + " has reached the maximum limit of " + MAX_ACTIVE_CARDS + " active payment cards");
+            }
+            card.setActive(true);
+        }
         return paymentCardMapper.toResponseDTO(card);
     }
 

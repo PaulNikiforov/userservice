@@ -90,7 +90,7 @@ class PaymentCardServiceTest {
     }
 
     @Test
-    void testGetCardById_Success() {
+    void getCardById_Success() {
         when(paymentCardRepository.findById(1L)).thenReturn(Optional.of(testCard));
         when(paymentCardMapper.toResponseDTO(testCard)).thenReturn(testResponseDTO);
 
@@ -105,7 +105,7 @@ class PaymentCardServiceTest {
     }
 
     @Test
-    void testGetCardById_NotFound() {
+    void getCardById_NotFound() {
         when(paymentCardRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThrows(PaymentCardNotFoundException.class, () -> paymentCardService.getCardById(999L));
@@ -115,7 +115,7 @@ class PaymentCardServiceTest {
     }
 
     @Test
-    void testAddCard_Success() {
+    void addCard_Success() {
         when(userRepository.findByIdWithLock(1L)).thenReturn(Optional.of(testUser));
         when(paymentCardRepository.countActiveCardsByUserId(1L)).thenReturn(2L);
         when(paymentCardMapper.toEntity(testRequestDTO)).thenReturn(testCard);
@@ -134,7 +134,7 @@ class PaymentCardServiceTest {
     }
 
     @Test
-    void testAddCard_UserNotFound() {
+    void addCard_UserNotFound() {
         when(userRepository.findByIdWithLock(999L)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> paymentCardService.addCard(999L, testRequestDTO));
@@ -144,7 +144,7 @@ class PaymentCardServiceTest {
     }
 
     @Test
-    void testAddCard_MaxLimitReached() {
+    void addCard_MaxLimitReached() {
         when(userRepository.findByIdWithLock(1L)).thenReturn(Optional.of(testUser));
         when(paymentCardRepository.countActiveCardsByUserId(1L)).thenReturn(5L); // Max limit
 
@@ -157,7 +157,7 @@ class PaymentCardServiceTest {
     }
 
     @Test
-    void testUpdateCard_Success() {
+    void updateCard_Success() {
         when(paymentCardRepository.findById(1L)).thenReturn(Optional.of(testCard));
         when(paymentCardMapper.toResponseDTO(testCard)).thenReturn(testResponseDTO);
 
@@ -171,7 +171,7 @@ class PaymentCardServiceTest {
     }
 
     @Test
-    void testDeleteCard_Success() {
+    void deleteCard_Success() {
         when(paymentCardRepository.findById(1L)).thenReturn(Optional.of(testCard));
         when(paymentCardMapper.toResponseDTO(testCard)).thenReturn(testResponseDTO);
 
@@ -185,7 +185,7 @@ class PaymentCardServiceTest {
     }
 
     @Test
-    void testGetCardById_InactiveCard_ThrowsException() {
+    void getCardById_InactiveCard_ThrowsException() {
         testCard.setActive(false);
         when(paymentCardRepository.findById(1L)).thenReturn(Optional.of(testCard));
 
@@ -195,21 +195,21 @@ class PaymentCardServiceTest {
     }
 
     @Test
-    void testGetCardsByUserId_UserNotFound() {
+    void getCardsByUserId_UserNotFound() {
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> paymentCardService.getCardsByUserId(999L));
     }
 
     @Test
-    void testUpdateCard_NotFound() {
+    void updateCard_NotFound() {
         when(paymentCardRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThrows(PaymentCardNotFoundException.class, () -> paymentCardService.updateCard(999L, testRequestDTO));
     }
 
     @Test
-    void testUpdateCard_InactiveCard_ThrowsException() {
+    void updateCard_InactiveCard_ThrowsException() {
         testCard.setActive(false);
         when(paymentCardRepository.findById(1L)).thenReturn(Optional.of(testCard));
 
@@ -219,7 +219,7 @@ class PaymentCardServiceTest {
     }
 
     @Test
-    void testAddCard_DuplicateCardNumber_ThrowsException() {
+    void addCard_DuplicateCardNumber_ThrowsException() {
         when(userRepository.findByIdWithLock(1L)).thenReturn(Optional.of(testUser));
         when(paymentCardRepository.countActiveCardsByUserId(1L)).thenReturn(2L);
         when(paymentCardMapper.toEntity(testRequestDTO)).thenReturn(testCard);
@@ -234,7 +234,7 @@ class PaymentCardServiceTest {
     }
 
     @Test
-    void testActivateCard_Success() {
+    void activateCard_Success() {
         testCard.setActive(false);
         when(paymentCardRepository.findById(1L)).thenReturn(Optional.of(testCard));
         when(paymentCardMapper.toResponseDTO(testCard)).thenReturn(testResponseDTO);
@@ -248,7 +248,7 @@ class PaymentCardServiceTest {
     }
 
     @Test
-    void testDeactivateCard_Success() {
+    void deactivateCard_Success() {
         when(paymentCardRepository.findById(1L)).thenReturn(Optional.of(testCard));
         when(paymentCardMapper.toResponseDTO(testCard)).thenReturn(testResponseDTO);
 
@@ -261,7 +261,7 @@ class PaymentCardServiceTest {
     }
 
     @Test
-    void testGetCardsByUserId_Success() {
+    void getCardsByUserId_Success() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(paymentCardRepository.findByUserIdAndActive(1L, true)).thenReturn(List.of(testCard));
         when(paymentCardMapper.toResponseDTO(testCard)).thenReturn(testResponseDTO);
@@ -277,21 +277,21 @@ class PaymentCardServiceTest {
     }
 
     @Test
-    void testDeleteCard_NotFound() {
+    void deleteCard_NotFound() {
         when(paymentCardRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThrows(PaymentCardNotFoundException.class, () -> paymentCardService.deleteCard(999L));
     }
 
     @Test
-    void testActivateCard_NotFound() {
+    void activateCard_NotFound() {
         when(paymentCardRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThrows(PaymentCardNotFoundException.class, () -> paymentCardService.activateCard(999L));
     }
 
     @Test
-    void testDeactivateCard_NotFound() {
+    void deactivateCard_NotFound() {
         when(paymentCardRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThrows(PaymentCardNotFoundException.class, () -> paymentCardService.deactivateCard(999L));

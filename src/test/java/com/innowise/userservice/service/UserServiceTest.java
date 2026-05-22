@@ -82,7 +82,7 @@ class UserServiceTest {
     }
 
     @Test
-    void testGetUserById_Success() {
+    void getUserById_Success() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(userMapper.toResponseDTO(testUser)).thenReturn(testResponseDTO);
 
@@ -97,7 +97,7 @@ class UserServiceTest {
     }
 
     @Test
-    void testGetUserById_NotFound() {
+    void getUserById_NotFound() {
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> userService.getUserById(999L));
@@ -107,7 +107,7 @@ class UserServiceTest {
     }
 
     @Test
-    void testGetUserById_InactiveUser_ThrowsException() {
+    void getUserById_InactiveUser_ThrowsException() {
         testUser.setActive(false);
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
 
@@ -117,7 +117,7 @@ class UserServiceTest {
     }
 
     @Test
-    void testCreateUser_Success() {
+    void createUser_Success() {
         when(userMapper.toEntity(testRequestDTO)).thenReturn(testUser);
         when(userRepository.saveAndFlush(any(User.class))).thenReturn(testUser);
         when(userMapper.toResponseDTO(testUser)).thenReturn(testResponseDTO);
@@ -132,7 +132,7 @@ class UserServiceTest {
     }
 
     @Test
-    void testCreateUser_DuplicateEmail_ThrowsException() {
+    void createUser_DuplicateEmail_ThrowsException() {
         when(userMapper.toEntity(testRequestDTO)).thenReturn(testUser);
         when(userRepository.saveAndFlush(any(User.class))).thenThrow(new DataIntegrityViolationException("duplicate key"));
 
@@ -143,7 +143,7 @@ class UserServiceTest {
     }
 
     @Test
-    void testUpdateUser_Success() {
+    void updateUser_Success() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(userMapper.toResponseDTO(testUser)).thenReturn(testResponseDTO);
 
@@ -157,7 +157,7 @@ class UserServiceTest {
     }
 
     @Test
-    void testDeleteUser_Success() {
+    void deleteUser_Success() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
 
         userService.deleteUser(1L);
@@ -168,7 +168,7 @@ class UserServiceTest {
     }
 
     @Test
-    void testFilterUsers_Success() {
+    void filterUsers_Success() {
         UserFilterDTO filter = new UserFilterDTO("John", null, null);
         Pageable pageable = PageRequest.of(0, 10);
         Page<User> userPage = new PageImpl<>(List.of(testUser));
@@ -186,7 +186,7 @@ class UserServiceTest {
     }
 
     @Test
-    void testUpdateUser_InactiveUser_ThrowsException() {
+    void updateUser_InactiveUser_ThrowsException() {
         testUser.setActive(false);
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
 
@@ -196,7 +196,7 @@ class UserServiceTest {
     }
 
     @Test
-    void testActivateUser_Success() {
+    void activateUser_Success() {
         testUser.setActive(false);
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(userMapper.toResponseDTO(testUser)).thenReturn(testResponseDTO);
@@ -210,7 +210,7 @@ class UserServiceTest {
     }
 
     @Test
-    void testDeactivateUser_Success() {
+    void deactivateUser_Success() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(userMapper.toResponseDTO(testUser)).thenReturn(testResponseDTO);
 
@@ -223,14 +223,14 @@ class UserServiceTest {
     }
 
     @Test
-    void testUpdateUser_NotFound() {
+    void updateUser_NotFound() {
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> userService.updateUser(999L, testRequestDTO));
     }
 
     @Test
-    void testUpdateUser_DuplicateEmail_ThrowsException() {
+    void updateUser_DuplicateEmail_ThrowsException() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(userRepository.saveAndFlush(any(User.class))).thenThrow(new DataIntegrityViolationException("duplicate"));
 
@@ -238,21 +238,21 @@ class UserServiceTest {
     }
 
     @Test
-    void testDeleteUser_NotFound() {
+    void deleteUser_NotFound() {
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> userService.deleteUser(999L));
     }
 
     @Test
-    void testActivateUser_NotFound() {
+    void activateUser_NotFound() {
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> userService.activateUser(999L));
     }
 
     @Test
-    void testDeactivateUser_NotFound() {
+    void deactivateUser_NotFound() {
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> userService.deactivateUser(999L));

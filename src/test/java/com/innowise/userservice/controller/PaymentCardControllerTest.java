@@ -1,6 +1,7 @@
 package com.innowise.userservice.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.innowise.userservice.exception.DuplicateCardNumberException;
 import com.innowise.userservice.exception.PaymentCardNotFoundException;
 import com.innowise.userservice.exception.UserNotFoundException;
 import com.innowise.userservice.model.dto.PaymentCardRequestDTO;
