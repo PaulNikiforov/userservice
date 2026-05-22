@@ -142,6 +142,8 @@ class PaymentCardFlowIT {
     void shouldSoftDeleteCard() {
         PaymentCardResponseDTO card = addCard(testUserId, "1111111111111111", "John Doe");
 
+        rest.exchange("/api/cards/" + card.id() + "/deactivate", HttpMethod.PATCH, null, Void.class);
+
         ResponseEntity<Void> deleteResponse = rest.exchange(
                 "/api/cards/" + card.id(), HttpMethod.DELETE, null, Void.class);
         assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
@@ -154,7 +156,7 @@ class PaymentCardFlowIT {
     @DisplayName("PATCH /api/cards/{id}/activate → 200, card accessible again")
     void shouldActivateCard() {
         PaymentCardResponseDTO card = addCard(testUserId, "1111111111111111", "John Doe");
-        rest.exchange("/api/cards/" + card.id(), HttpMethod.DELETE, null, Void.class);
+        rest.exchange("/api/cards/" + card.id() + "/deactivate", HttpMethod.PATCH, null, Void.class);
 
         ResponseEntity<PaymentCardResponseDTO> response = rest.exchange(
                 "/api/cards/" + card.id() + "/activate", HttpMethod.PATCH, null, PaymentCardResponseDTO.class);

@@ -122,6 +122,7 @@ class PaymentCardServiceCacheIT {
     @DisplayName("Should throw for inactive card via getCardById")
     void shouldThrowForInactiveCard() {
         PaymentCardResponseDTO card = addTestCard("7777777777777777", "John Doe");
+        paymentCardService.deactivateCard(card.id());
         paymentCardService.deleteCard(card.id());
         cacheManager.getCache("paymentCards").clear();
 
@@ -136,6 +137,7 @@ class PaymentCardServiceCacheIT {
 
         paymentCardService.getCardsByUserId(testUserId);
 
+        paymentCardService.deactivateCard(card.id());
         paymentCardService.deleteCard(card.id());
 
         assertThat(getCachedPaymentCard(card.id())).isNull();
@@ -146,7 +148,7 @@ class PaymentCardServiceCacheIT {
     @DisplayName("Should evict caches when card is activated")
     void shouldEvictCachesWhenCardActivated() {
         PaymentCardResponseDTO card = addTestCard("9999999999999999", "John Doe");
-        paymentCardService.deleteCard(card.id());
+        paymentCardService.deactivateCard(card.id());
 
         paymentCardService.getCardsByUserId(testUserId);
 

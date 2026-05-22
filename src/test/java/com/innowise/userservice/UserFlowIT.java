@@ -116,6 +116,8 @@ class UserFlowIT {
     void shouldSoftDeleteUser() {
         UserResponseDTO created = createUser("John", "Doe", "john@example.com");
 
+        rest.exchange("/api/users/" + created.id() + "/deactivate", HttpMethod.PATCH, null, Void.class);
+
         ResponseEntity<Void> deleteResponse = rest.exchange(
                 "/api/users/" + created.id(), HttpMethod.DELETE, null, Void.class);
 
@@ -129,7 +131,7 @@ class UserFlowIT {
     @DisplayName("PATCH /api/users/{id}/activate → 200, user accessible again")
     void shouldActivateUser() {
         UserResponseDTO created = createUser("John", "Doe", "john@example.com");
-        rest.exchange("/api/users/" + created.id(), HttpMethod.DELETE, null, Void.class);
+        rest.exchange("/api/users/" + created.id() + "/deactivate", HttpMethod.PATCH, null, Void.class);
 
         ResponseEntity<UserResponseDTO> response = rest.exchange(
                 "/api/users/" + created.id() + "/activate", HttpMethod.PATCH, null, UserResponseDTO.class);

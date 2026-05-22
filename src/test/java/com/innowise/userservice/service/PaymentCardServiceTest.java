@@ -2,6 +2,7 @@ package com.innowise.userservice.service;
 
 import com.innowise.userservice.model.dto.PaymentCardRequestDTO;
 import com.innowise.userservice.model.dto.PaymentCardResponseDTO;
+import com.innowise.userservice.exception.ActiveCardDeletionException;
 import com.innowise.userservice.exception.DuplicateCardNumberException;
 import com.innowise.userservice.exception.MaxPaymentCardsLimitException;
 import com.innowise.userservice.exception.PaymentCardNotFoundException;
@@ -172,16 +173,26 @@ class PaymentCardServiceTest {
 
     @Test
     void deleteCard_Success() {
+        testCard.setActive(false);
         when(paymentCardRepository.findById(1L)).thenReturn(Optional.of(testCard));
         when(paymentCardMapper.toResponseDTO(testCard)).thenReturn(testResponseDTO);
 
         PaymentCardResponseDTO result = paymentCardService.deleteCard(1L);
 
-        assertFalse(testCard.isActive());
         assertNotNull(result);
 
         verify(paymentCardRepository, times(1)).findById(1L);
         verify(paymentCardMapper, times(1)).toResponseDTO(testCard);
+        verify(paymentCardRepository, times(1)).delete(testCard);
+    }
+
+    @Test
+    void deleteCard_ActiveCard_ThrowsException() {
+        when(paymentCardRepository.findById(1L)).thenReturn(Optional.of(testCard));
+
+        assertThrows(ActiveCardDeletionException.class, () -> paymentCardService.deleteCard(1L));
+
+        verify(paymentCardRepository, never()).delete(any(PaymentCard.class));
     }
 
     @Test
@@ -237,6 +248,8 @@ class PaymentCardServiceTest {
     void activateCard_Success() {
         testCard.setActive(false);
         when(paymentCardRepository.findById(1L)).thenReturn(Optional.of(testCard));
+        when(userRepository.findByIdWithLock(1L)).thenReturn(Optional.of(testUser));
+        when(paymentCardRepository.countActiveCardsByUserId(1L)).thenReturn(0L);
         when(paymentCardMapper.toResponseDTO(testCard)).thenReturn(testResponseDTO);
 
         PaymentCardResponseDTO result = paymentCardService.activateCard(1L);
@@ -245,6 +258,8 @@ class PaymentCardServiceTest {
         assertNotNull(result);
 
         verify(paymentCardRepository, times(1)).findById(1L);
+        verify(userRepository, times(1)).findByIdWithLock(1L);
+        verify(paymentCardRepository, times(1)).countActiveCardsByUserId(1L);
     }
 
     @Test

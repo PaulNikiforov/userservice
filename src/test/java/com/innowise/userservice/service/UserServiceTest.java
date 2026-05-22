@@ -5,8 +5,10 @@ import com.innowise.userservice.model.dto.UserRequestDTO;
 import com.innowise.userservice.model.dto.UserResponseDTO;
 import com.innowise.userservice.exception.DuplicateEmailException;
 import com.innowise.userservice.exception.UserNotFoundException;
+import com.innowise.userservice.exception.UserDeletionNotAllowedException;
 import com.innowise.userservice.mapper.UserMapper;
 import com.innowise.userservice.model.User;
+import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +43,9 @@ class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PaymentCardRepository paymentCardRepository;
 
     @Mock
     private UserMapper userMapper;
@@ -158,13 +163,22 @@ class UserServiceTest {
 
     @Test
     void deleteUser_Success() {
+        testUser.setActive(false);
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
 
         userService.deleteUser(1L);
 
-        assertFalse(testUser.isActive());
-
         verify(userRepository, times(1)).findById(1L);
+        verify(userRepository, times(1)).delete(testUser);
+    }
+
+    @Test
+    void deleteUser_ActiveUser_ThrowsException() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+
+        assertThrows(UserDeletionNotAllowedException.class, () -> userService.deleteUser(1L));
+
+        verify(userRepository, never()).delete(any(User.class));
     }
 
     @Test
@@ -212,6 +226,7 @@ class UserServiceTest {
     @Test
     void deactivateUser_Success() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(paymentCardRepository.countActiveCardsByUserId(1L)).thenReturn(0L);
         when(userMapper.toResponseDTO(testUser)).thenReturn(testResponseDTO);
 
         UserResponseDTO result = userService.deactivateUser(1L);
@@ -220,6 +235,7 @@ class UserServiceTest {
         assertNotNull(result);
 
         verify(userRepository, times(1)).findById(1L);
+        verify(paymentCardRepository, times(1)).countActiveCardsByUserId(1L);
     }
 
     @Test

@@ -97,6 +97,7 @@ class UserServiceCacheIT {
         userService.getUserById(created.id());
         assertThat(getCachedUser(created.id())).isNotNull();
 
+        userService.deactivateUser(created.id());
         userService.deleteUser(created.id());
 
         assertThat(getCachedUser(created.id())).isNull();
@@ -111,7 +112,7 @@ class UserServiceCacheIT {
     @DisplayName("Should update cache when user is activated via @CachePut")
     void shouldUpdateCacheWhenUserActivated() {
         UserResponseDTO created = createTestUser("Tom", "Wilson", "tom@example.com");
-        userService.deleteUser(created.id());
+        userService.deactivateUser(created.id());
 
         UserResponseDTO activated = userService.activateUser(created.id());
 
@@ -150,6 +151,7 @@ class UserServiceCacheIT {
     @DisplayName("Should throw UserNotFoundException for soft-deleted user via getUserById")
     void shouldThrowForSoftDeletedUser() {
         UserResponseDTO created = createTestUser("Deleted", "User", "deleted@example.com");
+        userService.deactivateUser(created.id());
         userService.deleteUser(created.id());
         Optional.ofNullable(cacheManager.getCache("users")).ifPresent(Cache::clear);
 
