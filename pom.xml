@@ -17,7 +17,6 @@
 		<mockito.version>5.17.0</mockito.version>
 		<sonar.version>5.6.0.6792</sonar.version>
 		<jacocoArgLine></jacocoArgLine>
-		<argLine>${jacocoArgLine} -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
 		<sonar.projectKey>PaulNikiforov_userservice</sonar.projectKey>
 		<sonar.organization>paulnikiforov</sonar.organization>
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
@@ -165,15 +164,19 @@
 			</plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>@{jacocoArgLine} -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
-                    <argLine>${jacocoArgLine} -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
+                    <argLine>@{jacocoArgLine} -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
                 </configuration>
                 <executions>
                     <execution>
-                        <configuration>
-                            <propertyName>jacocoArgLine</propertyName>
-                        </configuration>
                         <goals>
                             <goal>integration-test</goal>
                             <goal>verify</goal>
@@ -197,9 +200,6 @@
                     <execution>
                         <id>report</id>
                         <phase>verify</phase>
-                        <configuration>
-                            <propertyName>jacocoArgLine</propertyName>
-                        </configuration>
                         <goals>
                             <goal>report</goal>
                         </goals>

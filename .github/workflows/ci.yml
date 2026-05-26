@@ -59,6 +59,7 @@ jobs:
         with:
           name: jacoco-report
           path: target/site/jacoco/jacoco.xml
+          if-no-files-found: error
 
   code-quality:
     name: SonarQube
