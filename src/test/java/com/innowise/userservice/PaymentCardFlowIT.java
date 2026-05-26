@@ -105,67 +105,69 @@ class PaymentCardFlowIT {
     }
 
     @Test
-    @DisplayName("GET /api/cards/{id} → 200 with card number")
+    @DisplayName("GET /api/users/{userId}/cards/{id} → 200 with card number")
     void shouldGetCardById() {
         PaymentCardResponseDTO card = addCard(testUserId, "1234567812345678", "John Doe");
 
         ResponseEntity<PaymentCardResponseDTO> response = rest.getForEntity(
-                "/api/cards/" + card.id(), PaymentCardResponseDTO.class);
+                "/api/users/" + testUserId + "/cards/" + card.id(), PaymentCardResponseDTO.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().number()).isEqualTo("1234567812345678");
     }
 
     @Test
-    @DisplayName("GET /api/cards/{id} not found → 404")
+    @DisplayName("GET /api/users/{userId}/cards/{id} not found → 404")
     void shouldReturn404ForMissingCard() {
-        ResponseEntity<ErrorResponse> response = rest.getForEntity("/api/cards/9999", ErrorResponse.class);
+        ResponseEntity<ErrorResponse> response = rest.getForEntity(
+                "/api/users/" + testUserId + "/cards/9999", ErrorResponse.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
-    @DisplayName("PUT /api/cards/{id} → 200 updated")
+    @DisplayName("PUT /api/users/{userId}/cards/{id} → 200 updated")
     void shouldUpdateCard() {
         PaymentCardResponseDTO card = addCard(testUserId, "1111111111111111", "John Doe");
         PaymentCardRequestDTO updateDTO = cardDTO("2222222222222222", "Updated Name");
 
         ResponseEntity<PaymentCardResponseDTO> response = rest.exchange(
-                "/api/cards/" + card.id(), HttpMethod.PUT, new HttpEntity<>(updateDTO), PaymentCardResponseDTO.class);
+                "/api/users/" + testUserId + "/cards/" + card.id(), HttpMethod.PUT, new HttpEntity<>(updateDTO), PaymentCardResponseDTO.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().holder()).isEqualTo("Updated Name");
     }
 
     @Test
-    @DisplayName("DELETE /api/cards/{id} → 204, then GET → 404")
+    @DisplayName("DELETE /api/users/{userId}/cards/{id} → 204, then GET → 404")
     void shouldSoftDeleteCard() {
         PaymentCardResponseDTO card = addCard(testUserId, "1111111111111111", "John Doe");
 
-        rest.exchange("/api/cards/" + card.id() + "/deactivate", HttpMethod.PATCH, null, Void.class);
+        rest.exchange("/api/users/" + testUserId + "/cards/" + card.id() + "/deactivate", HttpMethod.PATCH, null, Void.class);
 
         ResponseEntity<Void> deleteResponse = rest.exchange(
-                "/api/cards/" + card.id(), HttpMethod.DELETE, null, Void.class);
+                "/api/users/" + testUserId + "/cards/" + card.id(), HttpMethod.DELETE, null, Void.class);
         assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
-        ResponseEntity<ErrorResponse> getResponse = rest.getForEntity("/api/cards/" + card.id(), ErrorResponse.class);
+        ResponseEntity<ErrorResponse> getResponse = rest.getForEntity(
+                "/api/users/" + testUserId + "/cards/" + card.id(), ErrorResponse.class);
         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
-    @DisplayName("PATCH /api/cards/{id}/activate → 200, card accessible again")
+    @DisplayName("PATCH /api/users/{userId}/cards/{id}/activate → 200, card accessible again")
     void shouldActivateCard() {
         PaymentCardResponseDTO card = addCard(testUserId, "1111111111111111", "John Doe");
-        rest.exchange("/api/cards/" + card.id() + "/deactivate", HttpMethod.PATCH, null, Void.class);
+        rest.exchange("/api/users/" + testUserId + "/cards/" + card.id() + "/deactivate", HttpMethod.PATCH, null, Void.class);
 
         ResponseEntity<PaymentCardResponseDTO> response = rest.exchange(
-                "/api/cards/" + card.id() + "/activate", HttpMethod.PATCH, null, PaymentCardResponseDTO.class);
+                "/api/users/" + testUserId + "/cards/" + card.id() + "/activate", HttpMethod.PATCH, null, PaymentCardResponseDTO.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().active()).isTrue();
 
         ResponseEntity<PaymentCardResponseDTO> getResponse = rest.getForEntity(
-                "/api/cards/" + card.id(), PaymentCardResponseDTO.class);
+                "/api/users/" + testUserId + "/cards/" + card.id(), PaymentCardResponseDTO.class);
         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 

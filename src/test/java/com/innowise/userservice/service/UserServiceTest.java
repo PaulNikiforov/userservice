@@ -4,12 +4,14 @@ import com.innowise.userservice.model.dto.UserFilterDTO;
 import com.innowise.userservice.model.dto.UserRequestDTO;
 import com.innowise.userservice.model.dto.UserResponseDTO;
 import com.innowise.userservice.exception.DuplicateEmailException;
+import com.innowise.userservice.exception.UserDeactivationNotAllowedException;
 import com.innowise.userservice.exception.UserNotFoundException;
 import com.innowise.userservice.exception.UserDeletionNotAllowedException;
 import com.innowise.userservice.mapper.UserMapper;
 import com.innowise.userservice.model.User;
 import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
+import com.innowise.userservice.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,7 +53,7 @@ class UserServiceTest {
     private UserMapper userMapper;
 
     @InjectMocks
-    private UserService userService;
+    private UserServiceImpl userService;
 
     private User testUser;
     private UserRequestDTO testRequestDTO;
@@ -82,7 +84,8 @@ class UserServiceTest {
                 "john@example.com",
                 true,
                 null,
-                null
+                null,
+                List.of()
         );
     }
 
@@ -272,5 +275,16 @@ class UserServiceTest {
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> userService.deactivateUser(999L));
+    }
+
+    @Test
+    void deactivateUser_WithActiveCards_ThrowsException() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(paymentCardRepository.countActiveCardsByUserId(1L)).thenReturn(2L);
+
+        assertThrows(UserDeactivationNotAllowedException.class, () -> userService.deactivateUser(1L));
+
+        verify(paymentCardRepository, times(1)).countActiveCardsByUserId(1L);
+        verify(userRepository, never()).delete(any(User.class));
     }
 }

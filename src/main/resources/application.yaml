@@ -1,4 +1,3 @@
-# Requires a profile: local (host DB/Redis) or docker (env vars)
 spring:
   application:
     name: userservice

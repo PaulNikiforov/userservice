@@ -3,7 +3,6 @@ package com.innowise.userservice.repository.specification;
 import com.innowise.userservice.model.User;
 import org.springframework.data.jpa.domain.Specification;
 
-/** Dynamic JPA specifications for filtering users. */
 public final class UserSpecification {
 
     private UserSpecification() {

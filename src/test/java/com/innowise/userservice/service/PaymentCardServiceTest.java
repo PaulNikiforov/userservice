@@ -12,6 +12,7 @@ import com.innowise.userservice.model.PaymentCard;
 import com.innowise.userservice.model.User;
 import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
+import com.innowise.userservice.service.impl.PaymentCardServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,7 +49,7 @@ class PaymentCardServiceTest {
     private PaymentCardMapper paymentCardMapper;
 
     @InjectMocks
-    private PaymentCardService paymentCardService;
+    private PaymentCardServiceImpl paymentCardService;
 
     private User testUser;
     private PaymentCard testCard;
@@ -118,7 +119,7 @@ class PaymentCardServiceTest {
     @Test
     void addCard_Success() {
         when(userRepository.findByIdWithLock(1L)).thenReturn(Optional.of(testUser));
-        when(paymentCardRepository.countActiveCardsByUserId(1L)).thenReturn(2L);
+        when(paymentCardRepository.countByUserId(1L)).thenReturn(2L);
         when(paymentCardMapper.toEntity(testRequestDTO)).thenReturn(testCard);
         when(paymentCardRepository.saveAndFlush(any(PaymentCard.class))).thenReturn(testCard);
         when(paymentCardMapper.toResponseDTO(testCard)).thenReturn(testResponseDTO);
@@ -129,7 +130,7 @@ class PaymentCardServiceTest {
         assertEquals("1234567812345678", result.number());
 
         verify(userRepository, times(1)).findByIdWithLock(1L);
-        verify(paymentCardRepository, times(1)).countActiveCardsByUserId(1L);
+        verify(paymentCardRepository, times(1)).countByUserId(1L);
         verify(paymentCardMapper, times(1)).toEntity(testRequestDTO);
         verify(paymentCardRepository, times(1)).saveAndFlush(any(PaymentCard.class));
     }
@@ -147,12 +148,12 @@ class PaymentCardServiceTest {
     @Test
     void addCard_MaxLimitReached() {
         when(userRepository.findByIdWithLock(1L)).thenReturn(Optional.of(testUser));
-        when(paymentCardRepository.countActiveCardsByUserId(1L)).thenReturn(5L); // Max limit
+        when(paymentCardRepository.countByUserId(1L)).thenReturn(5L);
 
         assertThrows(MaxPaymentCardsLimitException.class, () -> paymentCardService.addCard(1L, testRequestDTO));
 
         verify(userRepository, times(1)).findByIdWithLock(1L);
-        verify(paymentCardRepository, times(1)).countActiveCardsByUserId(1L);
+        verify(paymentCardRepository, times(1)).countByUserId(1L);
         verify(paymentCardMapper, never()).toEntity(any());
         verify(paymentCardRepository, never()).saveAndFlush(any(PaymentCard.class));
     }
@@ -232,7 +233,7 @@ class PaymentCardServiceTest {
     @Test
     void addCard_DuplicateCardNumber_ThrowsException() {
         when(userRepository.findByIdWithLock(1L)).thenReturn(Optional.of(testUser));
-        when(paymentCardRepository.countActiveCardsByUserId(1L)).thenReturn(2L);
+        when(paymentCardRepository.countByUserId(1L)).thenReturn(2L);
         when(paymentCardMapper.toEntity(testRequestDTO)).thenReturn(testCard);
         when(paymentCardRepository.saveAndFlush(any(PaymentCard.class)))
                 .thenThrow(new DataIntegrityViolationException("duplicate key"));
@@ -248,8 +249,6 @@ class PaymentCardServiceTest {
     void activateCard_Success() {
         testCard.setActive(false);
         when(paymentCardRepository.findById(1L)).thenReturn(Optional.of(testCard));
-        when(userRepository.findByIdWithLock(1L)).thenReturn(Optional.of(testUser));
-        when(paymentCardRepository.countActiveCardsByUserId(1L)).thenReturn(0L);
         when(paymentCardMapper.toResponseDTO(testCard)).thenReturn(testResponseDTO);
 
         PaymentCardResponseDTO result = paymentCardService.activateCard(1L);
@@ -258,8 +257,6 @@ class PaymentCardServiceTest {
         assertNotNull(result);
 
         verify(paymentCardRepository, times(1)).findById(1L);
-        verify(userRepository, times(1)).findByIdWithLock(1L);
-        verify(paymentCardRepository, times(1)).countActiveCardsByUserId(1L);
     }
 
     @Test
@@ -278,7 +275,7 @@ class PaymentCardServiceTest {
     @Test
     void getCardsByUserId_Success() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        when(paymentCardRepository.findByUserIdAndActive(1L, true)).thenReturn(List.of(testCard));
+        when(paymentCardRepository.findByUserId(1L)).thenReturn(List.of(testCard));
         when(paymentCardMapper.toResponseDTO(testCard)).thenReturn(testResponseDTO);
 
         List<PaymentCardResponseDTO> result = paymentCardService.getCardsByUserId(1L);
@@ -288,7 +285,7 @@ class PaymentCardServiceTest {
         assertEquals("1234567812345678", result.getFirst().number());
 
         verify(userRepository, times(1)).findById(1L);
-        verify(paymentCardRepository, times(1)).findByUserIdAndActive(1L, true);
+        verify(paymentCardRepository, times(1)).findByUserId(1L);
     }
 
     @Test
@@ -310,5 +307,14 @@ class PaymentCardServiceTest {
         when(paymentCardRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThrows(PaymentCardNotFoundException.class, () -> paymentCardService.deactivateCard(999L));
+    }
+
+    @Test
+    void updateCard_DuplicateCardNumber_ThrowsException() {
+        when(paymentCardRepository.findById(1L)).thenReturn(Optional.of(testCard));
+        when(paymentCardRepository.saveAndFlush(any(PaymentCard.class)))
+                .thenThrow(new DataIntegrityViolationException("duplicate key"));
+
+        assertThrows(DuplicateCardNumberException.class, () -> paymentCardService.updateCard(1L, testRequestDTO));
     }
 }

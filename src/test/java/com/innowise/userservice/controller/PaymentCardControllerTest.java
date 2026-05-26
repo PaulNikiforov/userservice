@@ -106,7 +106,7 @@ class PaymentCardControllerTest {
     void getCardById_Success() throws Exception {
         when(paymentCardService.getCardById(1L)).thenReturn(responseDTO);
 
-        mockMvc.perform(get("/api/cards/1"))
+        mockMvc.perform(get("/api/users/1/cards/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.holder").value("John Doe"));
@@ -116,7 +116,7 @@ class PaymentCardControllerTest {
     void getCardById_NotFound() throws Exception {
         when(paymentCardService.getCardById(999L)).thenThrow(new PaymentCardNotFoundException("Card not found"));
 
-        mockMvc.perform(get("/api/cards/999"))
+        mockMvc.perform(get("/api/users/1/cards/999"))
                 .andExpect(status().isNotFound());
     }
 
@@ -124,7 +124,7 @@ class PaymentCardControllerTest {
     void updateCard_Success() throws Exception {
         when(paymentCardService.updateCard(eq(1L), any(PaymentCardRequestDTO.class))).thenReturn(responseDTO);
 
-        mockMvc.perform(put("/api/cards/1")
+        mockMvc.perform(put("/api/users/1/cards/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isOk())
@@ -136,7 +136,7 @@ class PaymentCardControllerTest {
         when(paymentCardService.updateCard(eq(999L), any(PaymentCardRequestDTO.class)))
                 .thenThrow(new PaymentCardNotFoundException("Card not found"));
 
-        mockMvc.perform(put("/api/cards/999")
+        mockMvc.perform(put("/api/users/1/cards/999")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isNotFound());
@@ -146,7 +146,7 @@ class PaymentCardControllerTest {
     void deleteCard_Success() throws Exception {
         when(paymentCardService.deleteCard(1L)).thenReturn(responseDTO);
 
-        mockMvc.perform(delete("/api/cards/1"))
+        mockMvc.perform(delete("/api/users/1/cards/1"))
                 .andExpect(status().isNoContent());
     }
 
@@ -154,7 +154,7 @@ class PaymentCardControllerTest {
     void activateCard_Success() throws Exception {
         when(paymentCardService.activateCard(1L)).thenReturn(responseDTO);
 
-        mockMvc.perform(patch("/api/cards/1/activate"))
+        mockMvc.perform(patch("/api/users/1/cards/1/activate"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L));
     }
@@ -163,7 +163,7 @@ class PaymentCardControllerTest {
     void deactivateCard_Success() throws Exception {
         when(paymentCardService.deactivateCard(1L)).thenReturn(responseDTO);
 
-        mockMvc.perform(patch("/api/cards/1/deactivate"))
+        mockMvc.perform(patch("/api/users/1/cards/1/deactivate"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L));
     }

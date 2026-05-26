@@ -12,16 +12,15 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/** REST API for payment card management. */
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/users/{userId}/cards")
 @RequiredArgsConstructor
 @Tag(name = "Payment Cards", description = "Payment card management APIs")
 public class PaymentCardController {
 
     private final PaymentCardService paymentCardService;
 
-    @PostMapping("/users/{userId}/cards")
+    @PostMapping
     public ResponseEntity<PaymentCardResponseDTO> addPaymentCard(
         @PathVariable Long userId,
         @Valid @RequestBody PaymentCardRequestDTO dto
@@ -30,7 +29,7 @@ public class PaymentCardController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    @GetMapping("/users/{userId}/cards")
+    @GetMapping
     public ResponseEntity<List<PaymentCardResponseDTO>> getUserCards(
         @PathVariable Long userId
     ) {
@@ -38,16 +37,18 @@ public class PaymentCardController {
         return ResponseEntity.ok(cards);
     }
 
-    @GetMapping("/cards/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<PaymentCardResponseDTO> getCardById(
+        @PathVariable Long userId,
         @PathVariable Long id
     ) {
         PaymentCardResponseDTO card = paymentCardService.getCardById(id);
         return ResponseEntity.ok(card);
     }
 
-    @PutMapping("/cards/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<PaymentCardResponseDTO> updateCard(
+        @PathVariable Long userId,
         @PathVariable Long id,
         @Valid @RequestBody PaymentCardRequestDTO dto
     ) {
@@ -55,24 +56,27 @@ public class PaymentCardController {
         return ResponseEntity.ok(updated);
     }
 
-    @DeleteMapping("/cards/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCard(
+        @PathVariable Long userId,
         @PathVariable Long id
     ) {
         paymentCardService.deleteCard(id);
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/cards/{id}/activate")
+    @PatchMapping("/{id}/activate")
     public ResponseEntity<PaymentCardResponseDTO> activateCard(
+        @PathVariable Long userId,
         @PathVariable Long id
     ) {
         PaymentCardResponseDTO activated = paymentCardService.activateCard(id);
         return ResponseEntity.ok(activated);
     }
 
-    @PatchMapping("/cards/{id}/deactivate")
+    @PatchMapping("/{id}/deactivate")
     public ResponseEntity<PaymentCardResponseDTO> deactivateCard(
+        @PathVariable Long userId,
         @PathVariable Long id
     ) {
         PaymentCardResponseDTO deactivated = paymentCardService.deactivateCard(id);

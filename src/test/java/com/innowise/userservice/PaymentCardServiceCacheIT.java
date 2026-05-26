@@ -19,7 +19,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.time.LocalDate;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -65,112 +64,125 @@ class PaymentCardServiceCacheIT {
     }
 
     @Test
-    @DisplayName("Should cache cards list after first retrieval — repository called once")
-    void shouldCacheCardsListAfterFirstRetrieval() {
-        addTestCard("1111111111111111", "John Doe");
+    @DisplayName("Should evict user cache when card is added")
+    void shouldEvictUserCacheWhenCardAdded() {
+        userService.getUserById(testUserId);
+        assertThat(getCachedUser(testUserId)).isNotNull();
 
-        paymentCardService.getCardsByUserId(testUserId);
-        paymentCardService.getCardsByUserId(testUserId);
+        addTestCard("3333333333333333", "John Doe");
 
-        verify(paymentCardRepository, times(1)).findByUserIdAndActive(testUserId, true);
+        assertThat(getCachedUser(testUserId)).isNull();
     }
 
     @Test
-    @DisplayName("Should cache single card after first retrieval — repository called once")
-    void shouldCacheSingleCardAfterFirstRetrieval() {
+    @DisplayName("Should evict user cache when card is updated")
+    void shouldEvictUserCacheWhenCardUpdated() {
+        PaymentCardResponseDTO card = addTestCard("4444444444444444", "John Doe");
+        userService.getUserById(testUserId);
+        assertThat(getCachedUser(testUserId)).isNotNull();
+
+        paymentCardService.updateCard(card.id(),
+                new PaymentCardRequestDTO("4444444444444444", "Updated Name", LocalDate.of(2030, 12, 31)));
+
+        assertThat(getCachedUser(testUserId)).isNull();
+    }
+
+    @Test
+    @DisplayName("Should evict user cache when card is deleted")
+    void shouldEvictUserCacheWhenCardDeleted() {
+        PaymentCardResponseDTO card = addTestCard("8888888888888888", "John Doe");
+        userService.getUserById(testUserId);
+        assertThat(getCachedUser(testUserId)).isNotNull();
+
+        paymentCardService.deactivateCard(card.id());
+        paymentCardService.deleteCard(card.id());
+
+        assertThat(getCachedUser(testUserId)).isNull();
+    }
+
+    @Test
+    @DisplayName("Should evict user cache when card is activated")
+    void shouldEvictUserCacheWhenCardActivated() {
+        PaymentCardResponseDTO card = addTestCard("9999999999999999", "John Doe");
+        paymentCardService.deactivateCard(card.id());
+
+        userService.getUserById(testUserId);
+        assertThat(getCachedUser(testUserId)).isNotNull();
+
+        paymentCardService.activateCard(card.id());
+
+        assertThat(getCachedUser(testUserId)).isNull();
+    }
+
+    @Test
+    @DisplayName("Should evict user cache when card is deactivated")
+    void shouldEvictUserCacheWhenCardDeactivated() {
+        PaymentCardResponseDTO card = addTestCard("1212121212121212", "John Doe");
+        userService.getUserById(testUserId);
+        assertThat(getCachedUser(testUserId)).isNotNull();
+
+        paymentCardService.deactivateCard(card.id());
+
+        assertThat(getCachedUser(testUserId)).isNull();
+    }
+
+    @Test
+    @DisplayName("Should evict only affected user's cache on card update")
+    void shouldEvictOnlyAffectedUserCacheOnCardUpdate() {
+        Long userBId = createSecondUser();
+        PaymentCardResponseDTO cardA = addTestCard("4444444444444444", "John Doe");
+        addTestCardForUser(userBId, "5555555555555555", "Jane Smith");
+
+        userService.getUserById(testUserId);
+        userService.getUserById(userBId);
+        assertThat(getCachedUser(testUserId)).isNotNull();
+        assertThat(getCachedUser(userBId)).isNotNull();
+
+        paymentCardService.updateCard(cardA.id(),
+                new PaymentCardRequestDTO("6666666666666666", "Updated", LocalDate.of(2030, 12, 31)));
+
+        assertThat(getCachedUser(testUserId)).isNull();
+        assertThat(getCachedUser(userBId)).isNotNull();
+    }
+
+    @Test
+    @DisplayName("After cache evict, re-fetched user contains updated card data")
+    void shouldReflectCardChangesAfterCacheEvict() {
+        userService.getUserById(testUserId);
+        assertThat(getCachedUser(testUserId).paymentCards()).isEmpty();
+
+        addTestCard("1111111111111111", "John Doe");
+
+        // cache evicted — next call re-fetches from DB
+        UserResponseDTO updated = userService.getUserById(testUserId);
+        assertThat(updated.paymentCards()).hasSize(1);
+        assertThat(updated.paymentCards().getFirst().number()).isEqualTo("1111111111111111");
+    }
+
+    @Test
+    @DisplayName("getCardById returns card without caching — repository always called")
+    void getCardByIdAlwaysHitsRepository() {
         PaymentCardResponseDTO card = addTestCard("2222222222222222", "John Doe");
 
         paymentCardService.getCardById(card.id());
         paymentCardService.getCardById(card.id());
 
-        verify(paymentCardRepository, times(1)).findById(card.id());
+        verify(paymentCardRepository, times(2)).findById(card.id());
     }
 
     @Test
-    @DisplayName("Should evict userCards cache when card is added")
-    void shouldEvictUserCardsWhenCardAdded() {
-        paymentCardService.getCardsByUserId(testUserId);
-        assertThat(getCachedUserCards(testUserId)).isNotNull();
-
-        addTestCard("3333333333333333", "John Doe");
-
-        assertThat(getCachedUserCards(testUserId)).isNull();
-    }
-
-    @Test
-    @DisplayName("Should evict only affected user's cards on card update, not other users")
-    void shouldEvictOnlyAffectedUserOnCardUpdate() {
-        Long userBId = createSecondUser();
-
-        addTestCard("4444444444444444", "John Doe");
-        addTestCardForUser(userBId, "5555555555555555", "Jane Smith");
-
-        paymentCardService.getCardsByUserId(testUserId);
-        paymentCardService.getCardsByUserId(userBId);
-        assertThat(getCachedUserCards(testUserId)).isNotNull();
-        assertThat(getCachedUserCards(userBId)).isNotNull();
-
-        PaymentCardResponseDTO cardA = paymentCardService.getCardsByUserId(testUserId).getFirst();
-        PaymentCardRequestDTO updateDTO = new PaymentCardRequestDTO("6666666666666666", "Updated", LocalDate.of(2030, 12, 31));
-        paymentCardService.updateCard(cardA.id(), updateDTO);
-
-        assertThat(getCachedUserCards(testUserId)).isNull();
-        assertThat(getCachedUserCards(userBId)).isNotNull();
-    }
-
-    @Test
-    @DisplayName("Should throw for inactive card via getCardById")
-    void shouldThrowForInactiveCard() {
+    @DisplayName("getCardById throws for deleted card")
+    void shouldThrowForDeletedCard() {
         PaymentCardResponseDTO card = addTestCard("7777777777777777", "John Doe");
         paymentCardService.deactivateCard(card.id());
         paymentCardService.deleteCard(card.id());
-        cacheManager.getCache("paymentCards").clear();
 
         Long cardId = card.id();
         assertThatThrownBy(() -> paymentCardService.getCardById(cardId))
                 .isInstanceOf(PaymentCardNotFoundException.class);
     }
 
-    @Test
-    @DisplayName("Should evict caches when card is soft-deleted")
-    void shouldEvictCachesWhenCardDeleted() {
-        PaymentCardResponseDTO card = addTestCard("8888888888888888", "John Doe");
-
-        paymentCardService.getCardsByUserId(testUserId);
-
-        paymentCardService.deactivateCard(card.id());
-        paymentCardService.deleteCard(card.id());
-
-        assertThat(getCachedPaymentCard(card.id())).isNull();
-        assertThat(getCachedUserCards(testUserId)).isNull();
-    }
-
-    @Test
-    @DisplayName("Should evict caches when card is activated")
-    void shouldEvictCachesWhenCardActivated() {
-        PaymentCardResponseDTO card = addTestCard("9999999999999999", "John Doe");
-        paymentCardService.deactivateCard(card.id());
-
-        paymentCardService.getCardsByUserId(testUserId);
-
-        paymentCardService.activateCard(card.id());
-
-        assertThat(getCachedPaymentCard(card.id())).isNull();
-        assertThat(getCachedUserCards(testUserId)).isNull();
-    }
-
-    @Test
-    @DisplayName("Should evict caches when card is deactivated")
-    void shouldEvictCachesWhenCardDeactivated() {
-        PaymentCardResponseDTO card = addTestCard("1212121212121212", "John Doe");
-
-        paymentCardService.getCardsByUserId(testUserId);
-
-        paymentCardService.deactivateCard(card.id());
-
-        assertThat(getCachedPaymentCard(card.id())).isNull();
-        assertThat(getCachedUserCards(testUserId)).isNull();
-    }
+    // --- helpers ---
 
     private PaymentCardResponseDTO addTestCard(String number, String holder) {
         return paymentCardService.addCard(testUserId,
@@ -183,22 +195,14 @@ class PaymentCardServiceCacheIT {
     }
 
     private Long createSecondUser() {
-        UserResponseDTO user = userService.createUser(
+        return userService.createUser(
                 new UserRequestDTO("Jane", "Smith", LocalDate.of(1992, 3, 15), "jane@example.com")
-        );
-        return user.id();
+        ).id();
     }
 
-    private List<PaymentCardResponseDTO> getCachedUserCards(Long userId) {
-        var cache = cacheManager.getCache("userCards");
+    private UserResponseDTO getCachedUser(Long userId) {
+        var cache = cacheManager.getCache("users");
         if (cache == null) return null;
-        return cache.get(userId, List.class);
-    }
-
-    private Object getCachedPaymentCard(Long id) {
-        var cache = cacheManager.getCache("paymentCards");
-        if (cache == null) return null;
-        var wrapper = cache.get(id);
-        return wrapper != null ? wrapper.get() : null;
+        return cache.get(userId, UserResponseDTO.class);
     }
 }

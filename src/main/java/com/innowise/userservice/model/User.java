@@ -20,7 +20,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-/** User entity. Supports soft deletion and has up to 5 active payment cards. */
 @Entity
 @Table(name = "users")
 @Getter
@@ -49,7 +48,6 @@ public class User extends BaseEntity {
     @Column(name = "active", nullable = false)
     private boolean active = true;
 
-    // orphanRemoval performs hard delete — always use card.setActive(false) for soft delete
     @BatchSize(size = 50)
     @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PaymentCard> paymentCards = new ArrayList<>();
@@ -69,24 +67,13 @@ public class User extends BaseEntity {
         card.setUser(this);
     }
 
-    public boolean removePaymentCard(PaymentCard card) {
+    public void removePaymentCard(PaymentCard card) {
         if (card == null) {
             throw new IllegalArgumentException("Payment card cannot be null");
         }
 
-        // Use removeIf to handle both persisted (with id) and non-persisted (without id) cards
-        boolean removed = paymentCards.removeIf(c -> {
-            if (c.getId() != null) {
-                return c.getId().equals(card.getId());
-            } else {
-                // For non-persisted cards, compare by reference
-                return c == card;
-            }
-        });
-
-        if (removed) {
+        if (paymentCards.remove(card)) {
             card.setUser(null);
         }
-        return removed;
     }
 }

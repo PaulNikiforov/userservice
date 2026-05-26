@@ -2,7 +2,7 @@ package com.innowise.userservice.model.dto;
 
 import lombok.Builder;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Map;
 
 /**
@@ -17,7 +17,7 @@ import java.util.Map;
  */
 @Builder
 public record ErrorResponse(
-    LocalDateTime timestamp,
+    Instant timestamp,
     int status,
     String error,
     String message,

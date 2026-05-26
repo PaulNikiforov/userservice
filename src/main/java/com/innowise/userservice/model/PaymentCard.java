@@ -17,7 +17,6 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 
-/** Payment card entity linked to a user via many-to-one. */
 @Entity
 @Table(name = "payment_cards")
 @Getter

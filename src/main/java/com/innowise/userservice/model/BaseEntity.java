@@ -10,7 +10,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-/** Base class with JPA auditing (createdAt, updatedAt). */
 @Getter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)

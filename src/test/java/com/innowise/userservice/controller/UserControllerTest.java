@@ -63,7 +63,8 @@ class UserControllerTest {
                 "john@example.com",
                 true,
                 null,
-                null
+                null,
+                List.of()
         );
     }
 

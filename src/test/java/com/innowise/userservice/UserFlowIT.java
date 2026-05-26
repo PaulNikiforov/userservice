@@ -1,8 +1,11 @@
 package com.innowise.userservice;
 
 import com.innowise.userservice.model.dto.ErrorResponse;
+import com.innowise.userservice.model.dto.PaymentCardRequestDTO;
+import com.innowise.userservice.model.dto.PaymentCardResponseDTO;
 import com.innowise.userservice.model.dto.UserRequestDTO;
 import com.innowise.userservice.model.dto.UserResponseDTO;
+import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,11 +35,15 @@ class UserFlowIT {
     private UserRepository userRepository;
 
     @Autowired
+    private PaymentCardRepository paymentCardRepository;
+
+    @Autowired
     private CacheManager cacheManager;
 
     @BeforeEach
     void setUp() {
         cacheManager.getCacheNames().forEach(name -> cacheManager.getCache(name).clear());
+        paymentCardRepository.deleteAll();
         userRepository.deleteAll();
     }
 
@@ -181,9 +188,45 @@ class UserFlowIT {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
+    @Test
+    @DisplayName("GET /api/users/{id} includes paymentCards list")
+    void shouldReturnCardsEmbeddedInUser() {
+        UserResponseDTO user = createUser("John", "Doe", "john@example.com");
+        addCard(user.id(), "1111111111111111", "John Doe");
+        addCard(user.id(), "2222222222222222", "John Doe");
+
+        ResponseEntity<UserResponseDTO> response = rest.getForEntity("/api/users/" + user.id(), UserResponseDTO.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().paymentCards()).hasSize(2);
+        assertThat(response.getBody().paymentCards())
+                .extracting(PaymentCardResponseDTO::number)
+                .containsExactlyInAnyOrder("1111111111111111", "2222222222222222");
+    }
+
+    @Test
+    @DisplayName("GET /api/users/{id} includes deactivated cards too")
+    void shouldReturnAllCardsIncludingInactive() {
+        UserResponseDTO user = createUser("Jane", "Doe", "jane@example.com");
+        PaymentCardResponseDTO card = addCard(user.id(), "3333333333333333", "Jane Doe");
+        rest.exchange("/api/users/" + user.id() + "/cards/" + card.id() + "/deactivate",
+                HttpMethod.PATCH, null, Void.class);
+
+        ResponseEntity<UserResponseDTO> response = rest.getForEntity("/api/users/" + user.id(), UserResponseDTO.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().paymentCards()).hasSize(1);
+        assertThat(response.getBody().paymentCards().getFirst().active()).isFalse();
+    }
+
     private UserResponseDTO createUser(String name, String surname, String email) {
         UserRequestDTO dto = new UserRequestDTO(name, surname, LocalDate.of(1990, 1, 1), email);
         ResponseEntity<UserResponseDTO> response = rest.postForEntity("/api/users", dto, UserResponseDTO.class);
         return response.getBody();
+    }
+
+    private PaymentCardResponseDTO addCard(Long userId, String number, String holder) {
+        PaymentCardRequestDTO dto = new PaymentCardRequestDTO(number, holder, LocalDate.of(2030, 12, 31));
+        return rest.postForEntity("/api/users/" + userId + "/cards", dto, PaymentCardResponseDTO.class).getBody();
     }
 }

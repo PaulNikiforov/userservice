@@ -1,22 +1,14 @@
 spring:
   jpa:
-    hibernate:
-      ddl-auto: create-drop
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   liquibase:
-    enabled: false
+    enabled: true
 
   cache:
     type: redis
-
-eureka:
-  client:
-    enabled: false
-    register-with-eureka: false
-    fetch-registry: false
 
 logging:
   level:

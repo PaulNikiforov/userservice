@@ -1,10 +1,13 @@
 package com.innowise.userservice;
 
 import com.innowise.userservice.exception.UserNotFoundException;
+import com.innowise.userservice.model.dto.PaymentCardRequestDTO;
 import com.innowise.userservice.model.dto.UserFilterDTO;
 import com.innowise.userservice.model.dto.UserRequestDTO;
 import com.innowise.userservice.model.dto.UserResponseDTO;
+import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
+import com.innowise.userservice.service.PaymentCardService;
 import com.innowise.userservice.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,8 +35,14 @@ class UserServiceCacheIT {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private PaymentCardService paymentCardService;
+
     @MockitoSpyBean
     private UserRepository userRepository;
+
+    @Autowired
+    private PaymentCardRepository paymentCardRepository;
 
     @Autowired
     private CacheManager cacheManager;
@@ -46,6 +55,7 @@ class UserServiceCacheIT {
                 cache.clear();
             }
         });
+        paymentCardRepository.deleteAll();
         userRepository.deleteAll();
     }
 
@@ -159,6 +169,40 @@ class UserServiceCacheIT {
 
         assertThatThrownBy(() -> userService.getUserById(userId))
                 .isInstanceOf(UserNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("Cached user contains paymentCards from DB")
+    void cachedUserShouldContainCards() {
+        UserResponseDTO created = createTestUser("CardOwner", "Test", "cardowner@example.com");
+        paymentCardService.addCard(created.id(),
+                new PaymentCardRequestDTO("1111111111111111", "CardOwner Test", LocalDate.of(2030, 12, 31)));
+
+        UserResponseDTO fetched = userService.getUserById(created.id());
+
+        assertThat(fetched.paymentCards()).hasSize(1);
+        assertThat(fetched.paymentCards().getFirst().number()).isEqualTo("1111111111111111");
+
+        UserResponseDTO cached = getCachedUser(created.id());
+        assertThat(cached).isNotNull();
+        assertThat(cached.paymentCards()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("After card added, re-fetched user reflects new card in cache")
+    void shouldCacheUpdatedCardsAfterCardAdded() {
+        UserResponseDTO created = createTestUser("Multi", "Card", "multicard@example.com");
+
+        userService.getUserById(created.id());
+        assertThat(getCachedUser(created.id()).paymentCards()).isEmpty();
+
+        paymentCardService.addCard(created.id(),
+                new PaymentCardRequestDTO("2222222222222222", "Multi Card", LocalDate.of(2030, 12, 31)));
+
+        // cache was evicted by addCard — next call re-fetches from DB
+        UserResponseDTO refetched = userService.getUserById(created.id());
+        assertThat(refetched.paymentCards()).hasSize(1);
+        assertThat(getCachedUser(created.id()).paymentCards()).hasSize(1);
     }
 
     private UserResponseDTO createTestUser(String name, String surname, String email) {

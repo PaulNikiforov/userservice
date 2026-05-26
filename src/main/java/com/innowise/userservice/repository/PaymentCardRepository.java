@@ -10,7 +10,7 @@ import java.util.List;
 public interface PaymentCardRepository extends
         JpaRepository<PaymentCard, Long> {
 
-    List<PaymentCard> findByUserIdAndActive(Long userId, Boolean active);
+    List<PaymentCard> findByUserId(Long userId);
 
     @Query(value = """
         SELECT COUNT(*)
@@ -18,4 +18,6 @@ public interface PaymentCardRepository extends
         WHERE user_id = :userId AND active = true
         """, nativeQuery = true)
     long countActiveCardsByUserId(@Param("userId") Long userId);
+
+    long countByUserId(Long userId);
 }
