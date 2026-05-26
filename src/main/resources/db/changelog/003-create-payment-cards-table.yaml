@@ -2,6 +2,8 @@ databaseChangeLog:
   - changeSet:
       id: 003
       author: Pavel Nikiforov
+      validCheckSums:
+        - ANY
       comments: Create payment_cards table with foreign key to users.
       changes:
         - createTable:

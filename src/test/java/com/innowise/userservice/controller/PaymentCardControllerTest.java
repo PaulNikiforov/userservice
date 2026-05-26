@@ -6,10 +6,12 @@ import com.innowise.userservice.exception.UserNotFoundException;
 import com.innowise.userservice.model.dto.PaymentCardRequestDTO;
 import com.innowise.userservice.model.dto.PaymentCardResponseDTO;
 import com.innowise.userservice.service.PaymentCardService;
+import com.innowise.userservice.config.AppConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
@@ -25,6 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(PaymentCardController.class)
+@Import(AppConfig.class)
 class PaymentCardControllerTest {
 
     @Autowired
