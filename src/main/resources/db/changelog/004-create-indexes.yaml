@@ -1,0 +1,50 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004
+      author: Pavel Nikiforov
+      comments: Add indexes for users and payment_cards.
+
+      changes:
+        - createIndex:
+            tableName: users
+            indexName: idx_users_name
+            columns:
+              - column:
+                  name: name
+
+        - createIndex:
+            tableName: users
+            indexName: idx_users_surname
+            columns:
+              - column:
+                  name: surname
+
+        - createIndex:
+            tableName: users
+            indexName: idx_users_created_at
+            columns:
+              - column:
+                  name: created_at
+
+        - createIndex:
+            tableName: payment_cards
+            indexName: idx_payment_cards_user_id
+            columns:
+              - column:
+                  name: user_id
+
+        - createIndex:
+            tableName: payment_cards
+            indexName: idx_payment_cards_expiration_date
+            columns:
+              - column:
+                  name: expiration_date
+
+        - createIndex:
+            tableName: payment_cards
+            indexName: idx_payment_cards_user_id_active
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: active

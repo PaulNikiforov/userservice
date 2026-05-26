@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005
+      author: Pavel Nikiforov
+      comments: |
+        Add named unique constraint on payment_cards.number.
+
+        Context:
+        - The unique constraint on payment_cards.number was created implicitly in changeSet 003
+          via Liquibase's "unique: true" shorthand, which generates an unnamed constraint.
+        - This changeSet adds an explicit named constraint (uq_payment_cards_number) to align
+          the database schema with the JPA entity annotation @Column(unique = true).
+
+        Business rule:
+        - Each payment card number must be globally unique across all users and cards.
+      changes:
+        - addUniqueConstraint:
+            tableName: payment_cards
+            columnNames: number
+            constraintName: uq_payment_cards_number
